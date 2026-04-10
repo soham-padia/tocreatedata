@@ -11,7 +11,11 @@ mkdir -p sbatch/logs outputs
 module purge
 module load python/3.13.5
 
-bash ./update.sh
+if [[ "${RUN_UPDATE:-0}" == "1" ]]; then
+  bash ./update.sh
+else
+  echo "Skipping git update inside setup_hpc.sh; run bash update.sh on the login node first."
+fi
 
 if [[ ! -d ".venv" ]]; then
   "$PYTHON_BIN" -m venv .venv

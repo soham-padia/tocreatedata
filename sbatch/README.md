@@ -6,7 +6,7 @@ This folder contains starter `sbatch` files for the HPC environment.
 
 1. Clone the repo once on the HPC.
 2. Create and populate the Python environment with `sbatch sbatch/setup_env.sbatch`.
-3. Run `bash update.sh` before submitting jobs, or let the job do it.
+3. Run `bash update.sh` on the login node before submitting jobs.
 4. Submit with `sbatch sbatch/score_pairs.sbatch`, `sbatch sbatch/mine_fairness.sbatch`, or `sbatch sbatch/mine_all_axes.sbatch`.
 
 ## Notes
@@ -18,3 +18,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - `setup_env.sbatch` wraps `setup_hpc.sh`, which creates `.venv` and installs dependencies.
 - Explorer's public GPU partition allows one GPU per job; the GPU jobs here request `--partition=gpu` and `--gres=gpu:1`.
 - The current scripts load `python/3.13.5` explicitly because the cluster `.venv` is built against that module.
+- The batch nodes may not have outbound GitHub access, so the jobs do not run `git fetch`; update on the login node first.

@@ -19,7 +19,8 @@ mkdir -p sbatch/logs outputs
 module purge
 module load python/3.13.5
 
-bash ./update.sh
+echo "Using existing checkout at $REPO_ROOT"
+echo "If you need new code, run bash update.sh on the login node before sbatch."
 
 if [[ ! -f ".venv/bin/activate" ]]; then
   echo "Missing .venv. Run sbatch sbatch/setup_env.sbatch first." >&2

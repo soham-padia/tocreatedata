@@ -15,4 +15,7 @@ mkdir -p sbatch/logs
 module purge
 module load python/3.13.5
 
+echo "Using existing checkout at $REPO_ROOT"
+echo "If you need new code, run bash update.sh on the login node before sbatch."
+
 bash ./setup_hpc.sh
