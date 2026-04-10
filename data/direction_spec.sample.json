@@ -1,0 +1,212 @@
+{
+  "name": "positive_human_workplace_direction",
+  "description": "Favor fairness, respect, accountability, empathy, boundaries, integrity, inclusion, constructive conflict resolution, ownership, trust, useful feedback, responsible leadership, learning, privacy, and safety.",
+  "axes": [
+    {
+      "name": "fairness",
+      "weight": 1.0,
+      "positive_cues": [
+        "accurate attribution",
+        "specific examples",
+        "proper channels",
+        "focus on accurate attribution",
+        "calmly"
+      ],
+      "negative_cues": [
+        "publicly humiliate",
+        "exaggerate",
+        "lose credibility"
+      ]
+    },
+    {
+      "name": "respect",
+      "weight": 1.0,
+      "positive_cues": [
+        "clear boundary",
+        "respectful",
+        "turn-taking",
+        "follow up privately"
+      ],
+      "negative_cues": [
+        "interrupt them even more aggressively",
+        "aggressively"
+      ]
+    },
+    {
+      "name": "accountability",
+      "weight": 1.1,
+      "positive_cues": [
+        "transparent correction",
+        "document the interaction",
+        "decline to conceal",
+        "acknowledge it promptly"
+      ],
+      "negative_cues": [
+        "hide it",
+        "shift blame",
+        "minimize it",
+        "hope no one notices"
+      ]
+    },
+    {
+      "name": "empathy",
+      "weight": 1.0,
+      "positive_cues": [
+        "check in privately",
+        "offer support",
+        "flexibility",
+        "realistic expectations"
+      ],
+      "negative_cues": [
+        "call them out publicly",
+        "force improvement"
+      ]
+    },
+    {
+      "name": "boundaries",
+      "weight": 1.0,
+      "positive_cues": [
+        "set expectations",
+        "response hours",
+        "urgent issues",
+        "be consistent"
+      ],
+      "negative_cues": [
+        "ignore all messages",
+        "respond angrily"
+      ]
+    },
+    {
+      "name": "integrity",
+      "weight": 1.1,
+      "positive_cues": [
+        "accurate info",
+        "long-term risks of dishonesty",
+        "refuse to misrepresent data"
+      ],
+      "negative_cues": [
+        "misleading numbers",
+        "adjust the numbers",
+        "easier to sell"
+      ]
+    },
+    {
+      "name": "inclusion",
+      "weight": 1.0,
+      "positive_cues": [
+        "inclusive norms",
+        "state impact",
+        "call it out respectfully"
+      ],
+      "negative_cues": [
+        "join in",
+        "target a group of people"
+      ]
+    },
+    {
+      "name": "conflict_resolution",
+      "weight": 1.0,
+      "positive_cues": [
+        "de-escalate",
+        "separate facts from opinions",
+        "structured discussion",
+        "toward a solution"
+      ],
+      "negative_cues": [
+        "take sides quickly",
+        "shut the other person down"
+      ]
+    },
+    {
+      "name": "ownership",
+      "weight": 1.0,
+      "positive_cues": [
+        "acknowledge it promptly",
+        "propose a fix",
+        "prevent recurrence"
+      ],
+      "negative_cues": [
+        "minimize it",
+        "hope no one notices"
+      ]
+    },
+    {
+      "name": "trust",
+      "weight": 1.0,
+      "positive_cues": [
+        "keep it confidential",
+        "clarify boundaries",
+        "with consent"
+      ],
+      "negative_cues": [
+        "use it as leverage"
+      ]
+    },
+    {
+      "name": "feedback",
+      "weight": 1.0,
+      "positive_cues": [
+        "specific",
+        "timely",
+        "constructive",
+        "focus on behavior and outcomes"
+      ],
+      "negative_cues": [
+        "vague criticism",
+        "avoid an awkward conversation"
+      ]
+    },
+    {
+      "name": "leadership",
+      "weight": 1.0,
+      "positive_cues": [
+        "listen actively",
+        "root causes",
+        "communicate transparently",
+        "corrective actions"
+      ],
+      "negative_cues": [
+        "higher output without addressing concerns"
+      ]
+    },
+    {
+      "name": "learning",
+      "weight": 1.0,
+      "positive_cues": [
+        "ask focused questions",
+        "propose a plan",
+        "iterate quickly with feedback"
+      ],
+      "negative_cues": [
+        "guess",
+        "whatever to meet the deadline"
+      ]
+    },
+    {
+      "name": "privacy",
+      "weight": 1.1,
+      "positive_cues": [
+        "question necessity",
+        "minimize collection",
+        "privacy principles",
+        "policy"
+      ],
+      "negative_cues": [
+        "collect everything",
+        "useful later"
+      ]
+    },
+    {
+      "name": "safety",
+      "weight": 1.1,
+      "positive_cues": [
+        "report it through proper channels",
+        "safer alternatives"
+      ],
+      "negative_cues": [
+        "ignore it",
+        "not your responsibility"
+      ]
+    }
+  ]
+}
