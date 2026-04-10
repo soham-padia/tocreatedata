@@ -41,6 +41,15 @@ mkdir -p "$RUN_DIR"
 # sbatch --gres=gpu:v100-sxm2:1 sbatch/mine_fairness.sbatch
 # Use a specific type only if you know it is available and compatible.
 
+nvidia-smi || true
+python - <<'PY'
+import torch
+print("torch:", torch.__version__)
+print("torch cuda build:", torch.version.cuda)
+print("cuda available:", torch.cuda.is_available())
+print("device count:", torch.cuda.device_count())
+PY
+
 python3 scripts/mine_candidates.py \
   --model-name "$MODEL_NAME" \
   --direction-file data/direction_spec.sample.json \

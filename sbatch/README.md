@@ -19,3 +19,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - Explorer's public GPU partition allows one GPU per job; the GPU jobs here request `--partition=gpu` and `--gres=gpu:1`.
 - The current scripts load `python/3.13.5` explicitly because the cluster `.venv` is built against that module.
 - The batch nodes may not have outbound GitHub access, so the jobs do not run `git fetch`; update on the login node first.
+- The HPC setup installs the CUDA 12.1 PyTorch wheel explicitly because Explorer's NVIDIA driver is not compatible with CUDA 13 wheels.

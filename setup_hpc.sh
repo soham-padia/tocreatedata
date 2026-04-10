@@ -25,9 +25,18 @@ fi
 source .venv/bin/activate
 
 python -m pip install -U pip setuptools wheel
-python -m pip install -e .
-python -m pip install -U "transformers" "torch" "accelerate" "datasets"
+python -m pip install -e . --no-deps
+python -m pip install -U "transformers>=4.44.0" "accelerate>=0.33.0" "datasets>=2.20.0"
+python -m pip uninstall -y torch torchvision torchaudio || true
+python -m pip install -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 python3 --version
 python -m pip --version
+python - <<'PY'
+import torch
+print("torch:", torch.__version__)
+print("torch cuda build:", torch.version.cuda)
+print("cuda available:", torch.cuda.is_available())
+print("device count:", torch.cuda.device_count())
+PY
 echo "HPC environment setup complete"

@@ -36,6 +36,15 @@ RUN_DIR="${RUN_DIR:-outputs/all_axes_${SLURM_JOB_ID}}"
 
 mkdir -p "$RUN_DIR"
 
+nvidia-smi || true
+python - <<'PY'
+import torch
+print("torch:", torch.__version__)
+print("torch cuda build:", torch.version.cuda)
+print("cuda available:", torch.cuda.is_available())
+print("device count:", torch.cuda.device_count())
+PY
+
 python3 scripts/mine_candidates.py \
   --model-name "$MODEL_NAME" \
   --direction-file data/direction_spec.sample.json \
