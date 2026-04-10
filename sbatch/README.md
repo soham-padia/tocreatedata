@@ -17,3 +17,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - The sample job defaults to the `fairness` axis and `Qwen/Qwen3.5-9B`.
 - `setup_env.sbatch` wraps `setup_hpc.sh`, which creates `.venv` and installs dependencies.
 - Explorer's public GPU partition allows one GPU per job; the GPU jobs here request `--partition=gpu` and `--gres=gpu:1`.
+- The current scripts load `python/3.13.5` explicitly because the cluster `.venv` is built against that module.

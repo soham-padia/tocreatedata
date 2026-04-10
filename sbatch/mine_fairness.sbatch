@@ -16,11 +16,8 @@ REPO_ROOT="${SLURM_SUBMIT_DIR:-$(pwd)}"
 cd "$REPO_ROOT"
 
 mkdir -p sbatch/logs outputs
-
-# Uncomment and adapt if your cluster uses environment modules.
-# module purge
-# module load cuda/12.1
-# module load python/3.11
+module purge
+module load python/3.13.5
 
 bash ./update.sh
 

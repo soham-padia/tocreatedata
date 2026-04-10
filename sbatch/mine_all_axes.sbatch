@@ -16,6 +16,8 @@ REPO_ROOT="${SLURM_SUBMIT_DIR:-$(pwd)}"
 cd "$REPO_ROOT"
 
 mkdir -p sbatch/logs outputs
+module purge
+module load python/3.13.5
 
 bash ./update.sh
 
