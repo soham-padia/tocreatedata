@@ -15,10 +15,13 @@ mkdir -p sbatch/logs
 
 bash ./update.sh
 
-if [[ -f ".venv/bin/activate" ]]; then
-  # shellcheck disable=SC1091
-  source .venv/bin/activate
+if [[ ! -f ".venv/bin/activate" ]]; then
+  echo "Missing .venv. Run sbatch sbatch/setup_env.sbatch first." >&2
+  exit 1
 fi
+
+# shellcheck disable=SC1091
+source .venv/bin/activate
 
 python3 scripts/score_seed_pairs.py \
   --direction-file data/direction_spec.sample.json \

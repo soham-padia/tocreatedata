@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+cd "$REPO_ROOT"
+
+mkdir -p sbatch/logs outputs
+
+# Uncomment and adapt if your cluster uses environment modules.
+# module purge
+# module load cuda/12.1
+# module load python/3.11
+
+bash ./update.sh
+
+if [[ ! -d ".venv" ]]; then
+  "$PYTHON_BIN" -m venv .venv
+fi
+
+# shellcheck disable=SC1091
+source .venv/bin/activate
+
+python -m pip install -U pip setuptools wheel
+python -m pip install -e .
+python -m pip install -U "transformers" "torch" "accelerate" "datasets"
+
+python3 --version
+python -m pip --version
+echo "HPC environment setup complete"

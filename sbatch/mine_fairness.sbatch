@@ -21,10 +21,13 @@ mkdir -p sbatch/logs outputs
 
 bash ./update.sh
 
-if [[ -f ".venv/bin/activate" ]]; then
-  # shellcheck disable=SC1091
-  source .venv/bin/activate
+if [[ ! -f ".venv/bin/activate" ]]; then
+  echo "Missing .venv. Run sbatch sbatch/setup_env.sbatch first." >&2
+  exit 1
 fi
+
+# shellcheck disable=SC1091
+source .venv/bin/activate
 
 export PYTHONUNBUFFERED=1
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-9B}"
