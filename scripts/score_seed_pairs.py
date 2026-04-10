@@ -9,21 +9,21 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from humanity_direction.data import load_jsonl
 from humanity_direction.direction import load_direction_spec, score_text_against_direction
+from humanity_direction.pairs import load_pairs
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score chosen/rejected seed pairs against the direction rubric.")
     parser.add_argument("--direction-file", required=True)
-    parser.add_argument("--pairs-file", required=True)
+    parser.add_argument("--pairs-path", required=True)
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     direction = load_direction_spec(args.direction_file)
-    rows = load_jsonl(args.pairs_file)
+    rows = load_pairs(args.pairs_path)
 
     wins = 0
     for index, row in enumerate(rows, start=1):

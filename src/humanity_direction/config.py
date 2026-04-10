@@ -7,10 +7,12 @@ from dataclasses import dataclass
 class MiningConfig:
     model_name: str
     direction_file: str
-    prompts_file: str
     lexicon_file: str
     output_file: str
     dataset_file: str
+    prompts_file: str | None = None
+    pairs_path: str | None = None
+    axis: str | None = None
     beam_width: int = 8
     max_phrase_len: int = 3
     top_k: int = 20

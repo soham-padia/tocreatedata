@@ -2,6 +2,7 @@
 
 from .config import MiningConfig
 from .direction import DirectionScore, DirectionSpec, load_direction_spec, score_text_against_direction
+from .pairs import collect_prompts, load_pairs
 from .search import CandidateResult, beam_search_phrases
 
 __all__ = [
@@ -10,6 +11,8 @@ __all__ = [
     "DirectionSpec",
     "MiningConfig",
     "beam_search_phrases",
+    "collect_prompts",
     "load_direction_spec",
+    "load_pairs",
     "score_text_against_direction",
 ]

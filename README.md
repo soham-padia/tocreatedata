@@ -17,10 +17,12 @@ The core point is to operationalize the direction. Do not treat "positive humani
 
 ## Project Layout
 
-- `data/seed_pairs.sample.jsonl`: starter preference pairs
+- `data/axes/*.sample.jsonl`: starter preference pairs grouped by axis
+- `data/seed_pairs.sample.jsonl`: merged starter preference pairs
 - `data/direction_spec.sample.json`: weighted rubric for the target direction
 - `data/eval_prompts.txt`: prompts used to probe the direction
 - `data/lexicon.txt`: seed words/phrases for mining
+- `scripts/build_dataset_views.py`: rebuilds merged pair and prompt views from `data/axes/`
 - `scripts/score_seed_pairs.py`: checks whether your seed pairs match the direction rubric
 - `scripts/mine_candidates.py`: mines phrases that push the base model toward the direction rubric
 - `src/humanity_direction/`: reusable scoring, search, and prompt utilities
@@ -39,14 +41,26 @@ Create a direction rubric that breaks "positive humanity" into measurable axes s
 
 The sample format is in `data/direction_spec.sample.json`.
 
-Then author seed pairs with:
+Then author many seed pairs per axis with:
 
 - `prompt`
 - `chosen`
 - `rejected`
-- optional `axis` and `notes`
+- required `axis`
+- optional `notes`
 
 The `chosen` answer should be more human-protective, cooperative, and reality-grounded than `rejected`.
+One axis should contain many situations, not one situation.
+`data/axes/fairness.sample.jsonl` shows the intended pattern.
+
+If you update axis files, rebuild the merged views:
+
+```bash
+python3 scripts/build_dataset_views.py \
+  --pairs-path data/axes \
+  --seed-output data/seed_pairs.sample.jsonl \
+  --prompts-output data/eval_prompts.txt
+```
 
 ### Stage 2: Validate the direction
 
@@ -55,7 +69,7 @@ Before mining, make sure your rubric roughly agrees with your own chosen/rejecte
 ```bash
 python3 scripts/score_seed_pairs.py \
   --direction-file data/direction_spec.sample.json \
-  --pairs-file data/seed_pairs.sample.jsonl
+  --pairs-path data/axes
 ```
 
 If the rubric does not consistently prefer `chosen` over `rejected`, fix the direction spec first.
@@ -76,10 +90,23 @@ Run:
 python3 scripts/mine_candidates.py \
   --model-name "YOUR_QWEN_CHECKPOINT" \
   --direction-file data/direction_spec.sample.json \
-  --prompts-file data/eval_prompts.txt \
+  --pairs-path data/axes \
   --lexicon-file data/lexicon.txt \
   --output-file outputs/mined_candidates.jsonl \
   --dataset-file outputs/mined_dataset.jsonl
+```
+
+To mine only one axis such as fairness:
+
+```bash
+python3 scripts/mine_candidates.py \
+  --model-name "YOUR_QWEN_CHECKPOINT" \
+  --direction-file data/direction_spec.sample.json \
+  --pairs-path data/axes \
+  --axis fairness \
+  --lexicon-file data/lexicon.txt \
+  --output-file outputs/fairness_candidates.jsonl \
+  --dataset-file outputs/fairness_dataset.jsonl
 ```
 
 ## What The Mining Script Actually Measures
