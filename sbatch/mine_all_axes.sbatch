@@ -2,7 +2,7 @@
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --job-name=mine-fairness
+#SBATCH --job-name=mine-all-axes
 #SBATCH --output=sbatch/logs/%x-%j.out
 #SBATCH --error=sbatch/logs/%x-%j.err
 #SBATCH --time=08:00:00
@@ -17,11 +17,6 @@ cd "$REPO_ROOT"
 
 mkdir -p sbatch/logs outputs
 
-# Uncomment and adapt if your cluster uses environment modules.
-# module purge
-# module load cuda/12.1
-# module load python/3.11
-
 bash ./update.sh
 
 if [[ ! -f ".venv/bin/activate" ]]; then
@@ -34,20 +29,14 @@ source .venv/bin/activate
 
 export PYTHONUNBUFFERED=1
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-9B}"
-AXIS="${AXIS:-fairness}"
-RUN_DIR="${RUN_DIR:-outputs/${AXIS}_${SLURM_JOB_ID}}"
+RUN_DIR="${RUN_DIR:-outputs/all_axes_${SLURM_JOB_ID}}"
 
 mkdir -p "$RUN_DIR"
-
-# Explorer allows a specific GPU type via:
-# sbatch --gres=gpu:v100-sxm2:1 sbatch/mine_fairness.sbatch
-# Use a specific type only if you know it is available and compatible.
 
 python3 scripts/mine_candidates.py \
   --model-name "$MODEL_NAME" \
   --direction-file data/direction_spec.sample.json \
   --pairs-path data/axes \
-  --axis "$AXIS" \
   --lexicon-file data/lexicon.txt \
   --output-file "$RUN_DIR/candidates.jsonl" \
   --dataset-file "$RUN_DIR/dataset.jsonl"
