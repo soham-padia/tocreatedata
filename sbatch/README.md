@@ -20,3 +20,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - The current scripts load `python/3.13.5` explicitly because the cluster `.venv` is built against that module.
 - The batch nodes may not have outbound GitHub access, so the jobs do not run `git fetch`; update on the login node first.
 - The HPC setup installs the CUDA 12.1 PyTorch wheel explicitly because Explorer's NVIDIA driver is not compatible with CUDA 13 wheels.
+- If the cluster `.venv` already has the wrong torch build, run `bash fix_hpc_torch.sh` on the login node to replace it with the CUDA 12.1 wheel set.
