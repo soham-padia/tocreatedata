@@ -31,15 +31,11 @@ fi
 source .venv/bin/activate
 
 export PYTHONUNBUFFERED=1
-MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-9B}"
+MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 AXIS="${AXIS:-fairness}"
 RUN_DIR="${RUN_DIR:-outputs/${AXIS}_${SLURM_JOB_ID}}"
 
 mkdir -p "$RUN_DIR"
-
-# Explorer allows a specific GPU type via:
-# sbatch --gres=gpu:v100-sxm2:1 sbatch/mine_fairness.sbatch
-# Use a specific type only if you know it is available and compatible.
 
 nvidia-smi || true
 python - <<'PY'
@@ -56,5 +52,8 @@ python3 scripts/mine_candidates.py \
   --pairs-path data/axes \
   --axis "$AXIS" \
   --lexicon-file data/lexicon.txt \
+  --beam-width "${BEAM_WIDTH:-8}" \
+  --top-k "${TOP_K:-20}" \
+  --max-new-tokens "${MAX_NEW_TOKENS:-128}" \
   --output-file "$RUN_DIR/candidates.jsonl" \
   --dataset-file "$RUN_DIR/dataset.jsonl"

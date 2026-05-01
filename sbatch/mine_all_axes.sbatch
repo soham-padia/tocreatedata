@@ -31,7 +31,7 @@ fi
 source .venv/bin/activate
 
 export PYTHONUNBUFFERED=1
-MODEL_NAME="${MODEL_NAME:-Qwen/Qwen3.5-9B}"
+MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 RUN_DIR="${RUN_DIR:-outputs/all_axes_${SLURM_JOB_ID}}"
 
 mkdir -p "$RUN_DIR"
@@ -50,5 +50,8 @@ python3 scripts/mine_candidates.py \
   --direction-file data/direction_spec.sample.json \
   --pairs-path data/axes \
   --lexicon-file data/lexicon.txt \
+  --beam-width "${BEAM_WIDTH:-8}" \
+  --top-k "${TOP_K:-20}" \
+  --max-new-tokens "${MAX_NEW_TOKENS:-128}" \
   --output-file "$RUN_DIR/candidates.jsonl" \
   --dataset-file "$RUN_DIR/dataset.jsonl"
