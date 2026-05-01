@@ -5,6 +5,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,11 +47,12 @@ def load_model(model_name: str, device: str):
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+    torch_dtype = torch.float16 if device == "cuda" else torch.float32
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype="auto",
-        device_map="auto" if device != "cpu" else None,
+        torch_dtype=torch_dtype,
     )
+    model.to(device)
     model.eval()
     return tokenizer, model
 

@@ -39,21 +39,17 @@ source .venv/bin/activate
 
 python -m pip install -U pip setuptools wheel
 python -m pip install -e . --no-deps
-python -m pip install -U "transformers>=4.44.0" "accelerate>=0.33.0" "datasets>=2.20.0" "safetensors>=0.4.5"
+python -m pip install -U "transformers>=4.44.0" "safetensors>=0.4.5"
 python -m pip uninstall -y torch torchvision torchaudio || true
 python -m pip install --no-cache-dir --force-reinstall torch --index-url https://download.pytorch.org/whl/cu121
 
 python - <<'PY'
 import torch
 import transformers
-import datasets
-import accelerate
 
 print("python ok")
 print("torch:", torch.__version__, "cuda_build:", torch.version.cuda)
 print("transformers:", transformers.__version__)
-print("datasets:", datasets.__version__)
-print("accelerate:", accelerate.__version__)
 PY
 
 JOB_OUTPUT="$REPO_ROOT/sbatch/logs/mine-fairness-%j.out"
