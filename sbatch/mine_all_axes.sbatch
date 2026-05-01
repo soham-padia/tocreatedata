@@ -16,19 +16,23 @@ REPO_ROOT="${SLURM_SUBMIT_DIR:-$(pwd)}"
 cd "$REPO_ROOT"
 
 mkdir -p sbatch/logs outputs
-module purge
-module load python/3.13.5
-
 echo "Using existing checkout at $REPO_ROOT"
 echo "If you need new code, run bash update.sh on the login node before sbatch."
 
-if [[ ! -f ".venv/bin/activate" ]]; then
-  echo "Missing .venv. Run sbatch sbatch/setup_env.sbatch first." >&2
+if [[ -n "${CONDA_ENV_NAME:-}" ]]; then
+  module purge
+  module load miniconda3/25.9.1
+  eval "$(conda shell.bash hook)"
+  conda activate "$CONDA_ENV_NAME"
+elif [[ -f ".venv/bin/activate" ]]; then
+  module purge
+  module load python/3.13.5
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
+else
+  echo "Missing runtime environment. Provide CONDA_ENV_NAME or create .venv first." >&2
   exit 1
 fi
-
-# shellcheck disable=SC1091
-source .venv/bin/activate
 
 export PYTHONUNBUFFERED=1
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"

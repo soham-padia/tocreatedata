@@ -22,3 +22,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - The HPC setup installs the CUDA 12.1 PyTorch wheel explicitly because Explorer's NVIDIA driver is not compatible with CUDA 13 wheels.
 - If the cluster `.venv` already has the wrong torch build, run `bash fix_hpc_torch.sh` on the login node to replace it with the CUDA 12.1 wheel set.
 - For the simplest overnight path from the login node, run `bash run_overnight_hpc_fairness.sh`.
+- If `venv + pip` keeps getting killed on the login node, use `bash run_overnight_hpc_fairness_conda.sh` instead; it builds a fresh `miniconda3` env and submits the fairness job.
