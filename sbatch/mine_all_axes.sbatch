@@ -21,7 +21,7 @@ echo "If you need new code, run bash update.sh on the login node before sbatch."
 
 if [[ -n "${CONDA_ENV_NAME:-}" ]]; then
   module purge
-  module load miniconda3/25.9.1
+  module load explorer anaconda3/2024.06 cuda/12.1.1
   eval "$(conda shell.bash hook)"
   conda activate "$CONDA_ENV_NAME"
 elif [[ -f ".venv/bin/activate" ]]; then

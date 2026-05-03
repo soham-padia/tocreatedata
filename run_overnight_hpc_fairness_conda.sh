@@ -19,13 +19,30 @@ cd "$REPO_ROOT"
 mkdir -p sbatch/logs outputs
 
 module purge
-module load miniconda3/25.9.1
+module load explorer anaconda3/2024.06
 
 if [[ "$RUN_UPDATE" == "1" ]]; then
   bash ./update.sh
 fi
 
-bash ./setup_hpc_conda.sh
+eval "$(conda shell.bash hook)"
+
+if ! conda env list | awk '{print $1}' | grep -qx "$CONDA_ENV_NAME"; then
+  cat <<EOF
+Missing conda env: $CONDA_ENV_NAME
+
+RC advised creating the environment on a GPU compute node, not on the login node.
+
+Run this first:
+  srun --partition=gpu-interactive --nodes=1 --gres=gpu:v100-sxm2:1 --cpus-per-task=2 --mem=10GB --time=02:00:00 --pty /bin/bash
+  cd $REPO_ROOT
+  bash setup_hpc_conda.sh
+
+Then submit the batch job:
+  bash run_overnight_hpc_fairness_conda.sh
+EOF
+  exit 1
+fi
 
 JOB_ID="$(
   CONDA_ENV_NAME="$CONDA_ENV_NAME" \
@@ -44,7 +61,7 @@ JOB_ID="$(
     --wrap='/bin/bash -c "
       set -e
       module purge
-      module load miniconda3/25.9.1
+      module load explorer anaconda3/2024.06 cuda/12.1.1
       eval \"\$(conda shell.bash hook)\"
       conda activate '"$CONDA_ENV_NAME"'
       cd \"$SLURM_SUBMIT_DIR\"
