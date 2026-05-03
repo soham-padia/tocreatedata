@@ -22,6 +22,41 @@ from humanity_direction.scoring import choose_device, generate_completion
 from humanity_direction.search import CandidateResult, beam_search_phrases
 
 
+def write_axis_split_outputs(
+    candidate_rows: list[dict],
+    dataset_rows: list[dict],
+    output_file: str,
+    dataset_file: str,
+) -> None:
+    output_root = Path(output_file).parent / "by_axis"
+    dataset_root = Path(dataset_file).parent / "by_axis"
+    axes = sorted({row["prompt_axis"] for row in dataset_rows})
+
+    for axis_name in axes:
+        axis_dataset_rows = [row for row in dataset_rows if row["prompt_axis"] == axis_name]
+        axis_candidate_rows: list[dict] = []
+        for row in candidate_rows:
+            axis_per_prompt = [item for item in row["per_prompt"] if item["prompt_axis"] == axis_name]
+            if not axis_per_prompt:
+                continue
+            axis_score = sum(item["score_delta"] for item in axis_per_prompt) / len(axis_per_prompt)
+            axis_candidate_rows.append(
+                {
+                    "axis": axis_name,
+                    "phrase": row["phrase"],
+                    "score": axis_score,
+                    "global_score": row["score"],
+                    "depth": row["depth"],
+                    "direction_name": row["direction_name"],
+                    "per_prompt": axis_per_prompt,
+                }
+            )
+
+        axis_candidate_rows.sort(key=lambda item: item["score"], reverse=True)
+        write_jsonl(output_root / axis_name / "candidates.jsonl", axis_candidate_rows)
+        write_jsonl(dataset_root / axis_name / "dataset.jsonl", axis_dataset_rows)
+
+
 def parse_args() -> MiningConfig:
     parser = argparse.ArgumentParser(description="Mine phrases that move a base model toward a direction rubric.")
     parser.add_argument("--model-name", required=True)
@@ -32,6 +67,7 @@ def parse_args() -> MiningConfig:
     parser.add_argument("--prompts-file")
     parser.add_argument("--pairs-path")
     parser.add_argument("--axis")
+    parser.add_argument("--axes", help="Comma-separated axis list to include when loading from --pairs-path.")
     parser.add_argument("--beam-width", type=int, default=8)
     parser.add_argument("--max-phrase-len", type=int, default=3)
     parser.add_argument("--top-k", type=int, default=20)
@@ -40,6 +76,8 @@ def parse_args() -> MiningConfig:
     args = parser.parse_args()
     if not args.prompts_file and not args.pairs_path:
         parser.error("one of --prompts-file or --pairs-path is required")
+    if args.axis and args.axes:
+        parser.error("use only one of --axis or --axes")
     return MiningConfig(**vars(args))
 
 
@@ -64,10 +102,15 @@ def main() -> None:
     print(f"detected device: {device}")
 
     direction = load_direction_spec(config.direction_file)
+    prompt_axis: dict[str, str] = {}
     if config.pairs_path:
         rows = load_pairs(config.pairs_path)
         if config.axis:
             rows = [row for row in rows if row.get("axis") == config.axis]
+        elif config.axes:
+            allowed_axes = {item.strip() for item in config.axes.split(",") if item.strip()}
+            rows = [row for row in rows if row.get("axis") in allowed_axes]
+        prompt_axis = {row["prompt"].strip(): row["axis"] for row in rows}
         prompts = collect_prompts(rows)
     else:
         prompts = load_lines(config.prompts_file)
@@ -134,6 +177,7 @@ def main() -> None:
             per_prompt_scores.append(
                 {
                     "prompt": prompt,
+                    "prompt_axis": prompt_axis.get(prompt),
                     "score_delta": delta,
                     "baseline_completion": baseline["completion"],
                     "baseline_score": baseline["score"].total,
@@ -154,6 +198,7 @@ def main() -> None:
             dataset_rows.append(
                 {
                     "prompt": prompt,
+                    "prompt_axis": prompt_axis.get(prompt),
                     "steering_phrase": item.phrase,
                     "baseline_completion": baseline["completion"],
                     "baseline_score": baseline["score"].total,
@@ -176,6 +221,8 @@ def main() -> None:
 
     write_jsonl(config.output_file, candidate_rows)
     write_jsonl(config.dataset_file, dataset_rows)
+    if len({value for value in prompt_axis.values() if value}) > 1:
+        write_axis_split_outputs(candidate_rows, dataset_rows, config.output_file, config.dataset_file)
     print(f"saved candidate ranking to {config.output_file}")
     print(f"saved mined dataset to {config.dataset_file}")
 

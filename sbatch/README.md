@@ -23,3 +23,4 @@ This folder contains starter `sbatch` files for the HPC environment.
 - If the cluster `.venv` already has the wrong torch build, run `bash fix_hpc_torch.sh` on the login node to replace it with the CUDA 12.1 wheel set.
 - For the simplest overnight path from the login node, run `bash run_overnight_hpc_fairness.sh`.
 - Northeastern RC recommends building the conda environment on a `gpu-interactive` node with `module load explorer anaconda3/2024.06 cuda/12.1.1`, then submitting the batch mining job from the login node with `bash run_overnight_hpc_fairness_conda.sh`.
+- For all-axis mining with one command, use `bash run_all_axes_hpc_conda.sh`. It submits three predefined axis shards either in `MODE=parallel` or `MODE=series` and stores outputs under `outputs/all_axes/`.

@@ -36,9 +36,16 @@ fi
 
 export PYTHONUNBUFFERED=1
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
-RUN_DIR="${RUN_DIR:-outputs/all_axes_${SLURM_JOB_ID}}"
+RUN_SLUG="${RUN_SLUG:-all_axes}"
+RUN_DIR="${RUN_DIR:-outputs/${RUN_SLUG}_${SLURM_JOB_ID}}"
+AXES="${AXES:-}"
 
 mkdir -p "$RUN_DIR"
+
+AXIS_ARGS=()
+if [[ -n "$AXES" ]]; then
+  AXIS_ARGS+=(--axes "$AXES")
+fi
 
 nvidia-smi || true
 python - <<'PY'
@@ -53,6 +60,7 @@ python3 scripts/mine_candidates.py \
   --model-name "$MODEL_NAME" \
   --direction-file data/direction_spec.sample.json \
   --pairs-path data/axes \
+  "${AXIS_ARGS[@]}" \
   --lexicon-file data/lexicon.txt \
   --beam-width "${BEAM_WIDTH:-8}" \
   --max-phrase-len "${MAX_PHRASE_LEN:-3}" \

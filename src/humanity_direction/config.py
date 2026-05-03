@@ -13,6 +13,7 @@ class MiningConfig:
     prompts_file: str | None = None
     pairs_path: str | None = None
     axis: str | None = None
+    axes: str | None = None
     beam_width: int = 8
     max_phrase_len: int = 3
     top_k: int = 20
