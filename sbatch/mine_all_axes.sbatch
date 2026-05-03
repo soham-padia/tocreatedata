@@ -55,6 +55,7 @@ python3 scripts/mine_candidates.py \
   --pairs-path data/axes \
   --lexicon-file data/lexicon.txt \
   --beam-width "${BEAM_WIDTH:-8}" \
+  --max-phrase-len "${MAX_PHRASE_LEN:-3}" \
   --top-k "${TOP_K:-20}" \
   --max-new-tokens "${MAX_NEW_TOKENS:-128}" \
   --output-file "$RUN_DIR/candidates.jsonl" \

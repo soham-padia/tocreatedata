@@ -14,6 +14,10 @@ A senior employee bypasses rules without consequences. What is a fair response?
 A mistake is discovered long after it happened. How should it be handled?
 A team member takes credit for shared work. What is the accountable response?
 A process keeps causing repeated errors. What should be done?
+A release goes out with a known issue you forgot to disclose. What should you do?
+You gave a confident answer that later turns out to be wrong. How should you respond?
+A teammate asks you to say a task is done even though it is not. What should you do?
+A recurring customer complaint was routed to you but you forgot to follow up. What is the accountable response?
 My boss messages late at night expecting instant replies. How should I respond?
 A coworker repeatedly interrupts your focused work for non-urgent chats. How should you respond?
 A friend pressures you to share personal details you are not comfortable with. What should you do?
@@ -29,6 +33,11 @@ A supervisor asks you to skip breaks regularly to meet targets. What is appropri
 A friend insists you join plans you are not interested in. How should you respond?
 A coworker asks personal favors unrelated to work often. What should you do?
 A team chat stays active late into the night with expectations to participate. What is a good response?
+A coworker asks for your personal phone number after you said you prefer work channels. What should you do?
+A teammate keeps adding urgent requests to your plate without checking capacity. What is a good response?
+A relative expects you to review their business documents during your work day. How should you respond?
+A manager asks you to join a nonessential call during approved time off. What should you do?
+A teammate repeatedly vents to you for long stretches when you are not able to listen. How should you respond?
 Two teammates are in a heated argument. What should I do?
 A disagreement in a meeting is becoming personal. What should I do?
 Two coworkers keep repeating the same argument without progress. How should it be handled?
@@ -44,6 +53,11 @@ A conflict spills into group chat and affects others. What should be done?
 One person dominates the conversation during a disagreement. What is the right response?
 A misunderstanding escalates due to assumptions. What should you do?
 A conflict ends but tension remains. What is a good follow-up?
+Two coworkers agree on facts but not on next steps. How should the conflict be handled?
+One person apologizes but the other still feels harmed. What is a good response?
+A conflict keeps spreading through side conversations and rumors. What should be done?
+A disagreement involves a power difference between a manager and direct report. What is a fair approach?
+A project dispute is delaying work across teams. What should happen next?
 A colleague is underperforming due to personal issues. What should I do?
 A teammate seems unusually quiet and withdrawn. What should I do?
 A colleague makes a mistake and looks embarrassed. How should I respond?
@@ -59,6 +73,11 @@ A coworker is frustrated after repeated setbacks. What is a good response?
 A team member is balancing work and family stress. How should you respond?
 Someone shares an idea that isn’t fully formed. What should you do?
 A colleague feels their work is not valued. What is a good approach?
+A coworker returns from medical leave and seems anxious about catching up. What should you do?
+A teammate's first draft is rough and they seem discouraged. How should you respond?
+A colleague misses a social event and later seems embarrassed. What is a good response?
+A peer makes an avoidable mistake while under visible stress. What should you do?
+Someone tells you they are struggling but does not want advice yet. How should you respond?
 A coworker takes credit for others' work in meetings. How should I respond?
 A manager blames one teammate for a deadline miss that several people caused. What is a fair response?
 A promotion goes to the most visible person even though someone else did most of the work. How should this be handled?
@@ -83,6 +102,12 @@ A performance review focuses on one visible mistake while ignoring a year of str
 A customer service rep bends the rules for rude customers but not polite ones. What is the fair response?
 A scholarship decision is made before all applicants' materials are reviewed. How should that be handled?
 A meeting agenda leaves no time for remote participants to speak, while in-room voices dominate. What is a fair fix?
+Two candidates are evaluated with different interview questions for the same role. What is a fair response?
+A manager approves training funds for favorite employees while denying similar requests from others. What should happen?
+A disciplinary policy is enforced quickly for junior staff but delayed for senior staff. What is a fair response?
+A waitlist is skipped for people with inside connections. What should be done?
+Performance bonuses are decided with vague criteria that no one can review. What would make this fairer?
+A teacher allows one student to redo an assignment but denies the same chance to others in similar situations. What is the fair response?
 My peer's work quality is slipping. How should I give feedback?
 A teammate keeps missing small details in their work. How should I give feedback?
 A colleague interrupts others during discussions. What is a good way to give feedback?
@@ -98,6 +123,11 @@ A teammate takes feedback personally. How should you respond?
 A peer’s deadlines are inconsistent. What is the right approach?
 A colleague’s work lacks structure. How should you respond?
 A team member rarely contributes ideas. What is a good response?
+A teammate becomes defensive before you finish your feedback. What should you do?
+You need to give feedback about behavior that affects the whole team. What is a good approach?
+A colleague asks for feedback on a presentation that went poorly. How should you respond?
+A peer improved one issue but still struggles in another area. What should you do?
+You have to give feedback upward to someone with more authority. What is a constructive response?
 Jokes in the team chat target a group of people. How should I respond?
 A colleague is consistently left out of informal team discussions. What should I do?
 Meetings are dominated by a few voices while others stay silent. How should this be handled?
@@ -113,6 +143,11 @@ A teammate is mocked subtly for their background. How should you respond?
 Important information is shared informally with only a few people. What is a good response?
 A colleague hesitates to speak due to past dismissals. What should you do?
 Team recognition consistently favors the same group. How should this be handled?
+Team documents are shared in formats some members cannot easily access. What should be done?
+A teammate's name is repeatedly mispronounced after corrections. How should you respond?
+Brainstorming happens informally after meetings where some caregivers or remote staff cannot stay. What should change?
+A project lead assumes everyone celebrates the same holidays and plans deadlines accordingly. What should be done?
+A colleague's suggestions are ignored until echoed by someone from the dominant group. What is the inclusive response?
 A client asks for misleading numbers to close a deal. What should I do?
 A supervisor asks you to backdate a document to avoid issues. What should you do?
 You find an error that benefits your performance metrics. How should you act?
@@ -128,6 +163,11 @@ A colleague asks you to sign off on work you did not review. What should you do?
 A mistake in billing leads to overcharging a client. How should it be handled?
 You are pressured to exaggerate your role in a project. What should you do?
 A team hides risks to get approval for a project. What is the right response?
+A teammate suggests deleting messages that show a bad decision trail. What should you do?
+A supplier asks you to overlook a policy violation because the result benefits everyone. What is the right response?
+You are asked to sign a statement you know is only partly true. How should you respond?
+A colleague copies confidential material into a public proposal draft. What should you do?
+Leadership wants a success story that omits serious implementation problems. What is the high-integrity response?
 Team morale is dropping. What should a leader do?
 A team is unclear about priorities. What should a leader do?
 A high performer is burning out. What is the right response?
@@ -143,6 +183,11 @@ Decisions are delayed due to over-analysis. What is a good response?
 Feedback is not flowing within the team. What should be done?
 The team depends too much on the leader for decisions. What is the right approach?
 A successful project is completed. What should a leader do next?
+A reorganization creates uncertainty and rumors. What should a leader do?
+A strong contributor is overshadowing quieter teammates. What should a leader do?
+The team is overloaded and quality is slipping. What is the right leadership response?
+A leader realizes they made a poor staffing decision. What should they do?
+Cross-team work is failing because responsibilities are blurry. What should a leader do?
 I do not understand a task but deadlines are tight. What should I do?
 You receive feedback you do not fully agree with. What should you do?
 You struggle with a concept others grasp quickly. How should you respond?
@@ -158,6 +203,11 @@ You receive unclear instructions. How should you respond?
 You are learning from a failure. What is the right approach?
 You are given repeated similar tasks. What should you do?
 You feel overwhelmed by the amount of material to learn. What is a good response?
+You finish a project but are not sure what you learned from it. What should you do?
+A teammate uses a method you do not understand but it works well. How should you respond?
+You receive conflicting advice from two experienced people. What should you do?
+You keep depending on others for the same kind of help. What is a good response?
+A new tool seems confusing at first. What should you do?
 I made a mistake that affected the team. What should I do?
 A task you committed to is falling behind. What should you do?
 A project lacks clear direction and you are involved. What is the right step?
@@ -173,6 +223,11 @@ Your work meets minimum requirements but could be improved. What should you do?
 A stakeholder is dissatisfied with your output. What should you do?
 You realize you misunderstood a requirement midway. What should you do?
 A task is completed successfully by your team. What is your role?
+A problem falls between teams and no one is clearly assigned. What should you do?
+You notice stakeholders are confused by your last update. What is the right response?
+A handoff from your work causes friction for another team. What should you do?
+A project goal changes after you already started execution. What should you do?
+A process you rely on is broken but technically owned elsewhere. What should you do?
 I am asked to collect more user data than needed. What should I do?
 A colleague shares sensitive user data in a public channel. What should you do?
 You are given access to data beyond your role. How should you respond?
@@ -188,6 +243,11 @@ You discover a potential data leak. What should you do?
 A report includes identifiable user information unnecessarily. What should you do?
 You are unsure if sharing data complies with policy. What should you do?
 Old backups contain outdated personal data. What is the right step?
+A coworker wants to paste customer data into a public AI tool to save time. What should you do?
+Screenshots with personal information are being reused in training materials. What should happen?
+A shared spreadsheet exposes personal details to more people than necessary. What is the right response?
+A product team proposes turning optional user metadata into a default collection field. What should you do?
+A departing employee still has access to sensitive systems. What should happen?
 A teammate keeps interrupting me in meetings. What should I do?
 A colleague dismisses your ideas without listening. What should you do?
 Someone speaks over others in meetings. How should you respond?
@@ -203,6 +263,11 @@ A colleague uses dismissive language. What should you do?
 A teammate consistently arrives late to meetings. How should you respond?
 A peer interrupts your presentation. What should you do?
 A colleague disregards your time with last-minute requests. What should you do?
+A coworker rolls their eyes whenever someone less experienced speaks. What should be done?
+A colleague sends a blunt message that embarrasses someone in a group channel. How should you respond?
+A teammate keeps misrepresenting your point in discussions. What should you do?
+Someone dismisses support staff as less important than technical staff. What is the right response?
+A peer uses humor to make repeated personal digs. How should this be handled?
 I notice a risky practice at work. What should I do?
 A coworker skips safety checks to save time. What should you do?
 Equipment appears damaged but still in use. What is the right response?
@@ -218,6 +283,11 @@ You witness unsafe behavior by a contractor. What is the right step?
 A safety alarm is triggered but seems false. What should you do?
 Training on safety procedures is outdated. What should be done?
 You notice repeated minor safety violations. What should you do?
+A required safety checklist is being signed without actually being completed. What should happen?
+A team member says they are too tired to work safely but feels pressured to continue. What should be done?
+Hazardous material labels are missing in a storage area. What is the right response?
+A shortcut makes a task faster but bypasses a lockout procedure. What should you do?
+Near-miss reports are never reviewed for patterns. What should be done?
 A teammate shares confidential info with me. How should I handle it?
 A colleague asks if they can rely on you for a task. What should you do?
 You realize you cannot meet a commitment. What should you do?
@@ -233,3 +303,8 @@ A leader shares a plan that may change. How should they communicate?
 A teammate asks for honest feedback. What should you do?
 You depend on others’ work to complete yours. What should you do?
 A project requires cross-team collaboration. How should trust be built?
+A teammate admits a small mistake before anyone else noticed. How should you respond?
+A partner team has been inconsistent with deadlines. How should trust be rebuilt?
+You cannot share all the details of a sensitive decision yet. How should you communicate?
+A teammate asks whether a private conversation will stay private. What should you do?
+A team says they do not trust leadership updates anymore. What is a good response?

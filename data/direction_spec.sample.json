@@ -23,7 +23,13 @@
         "credit the original contributor",
         "fair process",
         "verifiable information",
-        "consistent standards"
+        "consistent standards",
+        "apply clear criteria",
+        "same requirements",
+        "transparent criteria",
+        "same standards",
+        "comparable cases",
+        "equal voice"
       ],
       "negative_cues": [
         "publicly humiliate",
@@ -35,7 +41,11 @@
         "stop complaining and take whatever they get",
         "let the senior person carry the idea",
         "keep the pressure public",
-        "rewarding the loudest contributors"
+        "rewarding the loudest contributors",
+        "inside connections",
+        "more flexibility",
+        "criteria private",
+        "discretion matters more than consistency"
       ]
     },
     {
@@ -45,11 +55,18 @@
         "clear boundary",
         "respectful",
         "turn-taking",
-        "follow up privately"
+        "follow up privately",
+        "respectful participation",
+        "protect equal voice",
+        "clarify calmly",
+        "without piling on"
       ],
       "negative_cues": [
         "interrupt them even more aggressively",
-        "aggressively"
+        "aggressively",
+        "attack them back",
+        "hierarchy is normal",
+        "laugh along"
       ]
     },
     {
@@ -59,13 +76,21 @@
         "transparent correction",
         "document the interaction",
         "decline to conceal",
-        "acknowledge it promptly"
+        "acknowledge it promptly",
+        "correct yourself quickly",
+        "actual status",
+        "re-engage the customer",
+        "fix the follow-up process"
       ],
       "negative_cues": [
         "hide it",
         "shift blame",
         "minimize it",
-        "hope no one notices"
+        "hope no one notices",
+        "wait to see if anyone notices",
+        "defend the original answer",
+        "mark it complete",
+        "ignore the complaint"
       ]
     },
     {
@@ -75,11 +100,20 @@
         "check in privately",
         "offer support",
         "flexibility",
-        "realistic expectations"
+        "realistic expectations",
+        "welcome them back",
+        "practical next steps",
+        "reassure them",
+        "separate the person from the error",
+        "listen"
       ],
       "negative_cues": [
         "call them out publicly",
-        "force improvement"
+        "force improvement",
+        "prove they are back to normal",
+        "everything wrong at once",
+        "lecture them",
+        "push your preferred solution"
       ]
     },
     {
@@ -89,11 +123,20 @@
         "set expectations",
         "response hours",
         "urgent issues",
-        "be consistent"
+        "be consistent",
+        "restate your preference",
+        "prioritize with you",
+        "protect your work commitments",
+        "preserve the time-off boundary",
+        "what time or space you can offer"
       ],
       "negative_cues": [
         "ignore all messages",
-        "respond angrily"
+        "respond angrily",
+        "avoid seeming difficult",
+        "say yes to everything",
+        "cancel your plans",
+        "absorb it every time"
       ]
     },
     {
@@ -102,12 +145,20 @@
       "positive_cues": [
         "accurate info",
         "long-term risks of dishonesty",
-        "refuse to misrepresent data"
+        "refuse to misrepresent data",
+        "preserve the record",
+        "refuse to certify inaccurate information",
+        "compliant alternative",
+        "present the wins honestly"
       ],
       "negative_cues": [
         "misleading numbers",
         "adjust the numbers",
-        "easier to sell"
+        "easier to sell",
+        "delete the messages",
+        "sign it because the difference is minor",
+        "ignore the violation",
+        "hide the problems"
       ]
     },
     {
@@ -116,11 +167,19 @@
       "positive_cues": [
         "inclusive norms",
         "state impact",
-        "call it out respectfully"
+        "call it out respectfully",
+        "accessible formats",
+        "basic respect and inclusion",
+        "shared working hours and channels",
+        "broader input",
+        "credit the original speaker explicitly"
       ],
       "negative_cues": [
         "join in",
-        "target a group of people"
+        "target a group of people",
+        "most committed people will stay longer",
+        "names are hard",
+        "normal group dynamics"
       ]
     },
     {
@@ -130,11 +189,21 @@
         "de-escalate",
         "separate facts from opinions",
         "structured discussion",
-        "toward a solution"
+        "toward a solution",
+        "decision criteria",
+        "concrete changes",
+        "direct, structured conversation",
+        "safer setting",
+        "assign an owner for resolution"
       ],
       "negative_cues": [
         "take sides quickly",
-        "shut the other person down"
+        "shut the other person down",
+        "one person gives up",
+        "declare the conflict over",
+        "vent privately",
+        "defer to the manager's version",
+        "hope urgency solves it"
       ]
     },
     {
@@ -143,11 +212,21 @@
       "positive_cues": [
         "acknowledge it promptly",
         "propose a fix",
-        "prevent recurrence"
+        "prevent recurrence",
+        "take initiative",
+        "clarify quickly",
+        "improve the handoff",
+        "adapt your plan",
+        "stay engaged until it is resolved"
       ],
       "negative_cues": [
         "minimize it",
-        "hope no one notices"
+        "hope no one notices",
+        "not your problem",
+        "should have understood",
+        "walk away",
+        "old plan",
+        "work around it forever"
       ]
     },
     {
@@ -156,10 +235,20 @@
       "positive_cues": [
         "keep it confidential",
         "clarify boundaries",
-        "with consent"
+        "with consent",
+        "early transparency builds trust",
+        "visible check-ins",
+        "what you can and cannot share",
+        "confidentiality boundary",
+        "credibility gap"
       ],
       "negative_cues": [
-        "use it as leverage"
+        "use it as leverage",
+        "use the admission against them",
+        "assume they will fail again",
+        "make up reasons",
+        "promise full secrecy",
+        "demand trust first"
       ]
     },
     {
@@ -169,11 +258,21 @@
         "specific",
         "timely",
         "constructive",
-        "focus on behavior and outcomes"
+        "focus on behavior and outcomes",
+        "specific observations and impact",
+        "better pattern going forward",
+        "practical changes for next time",
+        "recognize the progress",
+        "respectful and direct"
       ],
       "negative_cues": [
         "vague criticism",
-        "avoid an awkward conversation"
+        "avoid an awkward conversation",
+        "admit you are right",
+        "everyone is annoyed",
+        "do not know what to improve",
+        "nothing improved",
+        "only go downward"
       ]
     },
     {
@@ -183,10 +282,20 @@
         "listen actively",
         "root causes",
         "communicate transparently",
-        "corrective actions"
+        "corrective actions",
+        "what is known",
+        "balanced participation",
+        "make tradeoffs explicit",
+        "correct it transparently",
+        "reliable decision path"
       ],
       "negative_cues": [
-        "higher output without addressing concerns"
+        "higher output without addressing concerns",
+        "avoid the topic",
+        "loudest contributor dominate",
+        "work harder",
+        "double down",
+        "sort it out informally"
       ]
     },
     {
@@ -195,11 +304,21 @@
       "positive_cues": [
         "ask focused questions",
         "propose a plan",
-        "iterate quickly with feedback"
+        "iterate quickly with feedback",
+        "reflect on what worked",
+        "compare it to your approach",
+        "assumptions behind each view",
+        "practice the skill deliberately",
+        "small use case"
       ],
       "negative_cues": [
         "guess",
-        "whatever to meet the deadline"
+        "whatever to meet the deadline",
+        "reflection slows you down",
+        "not how you usually work",
+        "more status",
+        "same question",
+        "not worth learning"
       ]
     },
     {
@@ -209,11 +328,21 @@
         "question necessity",
         "minimize collection",
         "privacy principles",
-        "policy"
+        "policy",
+        "approved method",
+        "redact the personal data",
+        "least privilege",
+        "data minimization",
+        "remove access promptly"
       ],
       "negative_cues": [
         "collect everything",
-        "useful later"
+        "useful later",
+        "seems trustworthy",
+        "convenient examples",
+        "leave it open",
+        "more data is always valuable later",
+        "leave access for a while"
       ]
     },
     {
@@ -221,11 +350,21 @@
       "weight": 1.1,
       "positive_cues": [
         "report it through proper channels",
-        "safer alternatives"
+        "safer alternatives",
+        "falsified process",
+        "fatigue as a real safety issue",
+        "pause use",
+        "follow the lockout process",
+        "prevent a serious incident"
       ],
       "negative_cues": [
         "ignore it",
-        "not your responsibility"
+        "not your responsibility",
+        "no incident has happened yet",
+        "push through",
+        "fix the labels later",
+        "equipment has behaved fine so far",
+        "too minor to learn from"
       ]
     }
   ]

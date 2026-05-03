@@ -13,6 +13,7 @@ RUN_UPDATE="${RUN_UPDATE:-0}"
 BEAM_WIDTH="${BEAM_WIDTH:-6}"
 TOP_K="${TOP_K:-12}"
 MAX_NEW_TOKENS="${MAX_NEW_TOKENS:-96}"
+MAX_PHRASE_LEN="${MAX_PHRASE_LEN:-3}"
 
 cd "$REPO_ROOT"
 
@@ -82,6 +83,7 @@ PY
         --axis '"$AXIS"' \
         --lexicon-file data/lexicon.txt \
         --beam-width '"$BEAM_WIDTH"' \
+        --max-phrase-len '"$MAX_PHRASE_LEN"' \
         --top-k '"$TOP_K"' \
         --max-new-tokens '"$MAX_NEW_TOKENS"' \
         --output-file outputs/'"$AXIS"'_\$SLURM_JOB_ID/candidates.jsonl \
