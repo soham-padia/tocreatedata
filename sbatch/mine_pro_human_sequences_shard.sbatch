@@ -3,8 +3,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --job-name=mech-shard
-#SBATCH --output=sbatch/logs/%x-%A_%a.out
-#SBATCH --error=sbatch/logs/%x-%A_%a.err
+#SBATCH --output=sbatch/logs/%x-%j.out
+#SBATCH --error=sbatch/logs/%x-%j.err
 #SBATCH --time=08:00:00
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G

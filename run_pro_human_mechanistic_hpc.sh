@@ -7,14 +7,15 @@ MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 RUN_UPDATE="${RUN_UPDATE:-0}"
 RUN_SLUG="${RUN_SLUG:-pro_human_global}"
 RUN_TAG="${RUN_TAG:-$(date +%Y%m%d_%H%M%S)}"
-NUM_SHARDS="${NUM_SHARDS:-4}"
+NUM_SHARDS="${NUM_SHARDS:-5}"
 MIN_PHRASE_LEN="${MIN_PHRASE_LEN:-1}"
 MAX_PHRASE_LEN="${MAX_PHRASE_LEN:-5}"
 BATCH_SIZE="${BATCH_SIZE:-128}"
 RETAIN_TOP_K="${RETAIN_TOP_K:-5000}"
 FINAL_TOP_K="${FINAL_TOP_K:-1000}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
-DIRECTION_TENSORS="${DIRECTION_TENSORS:?set DIRECTION_TENSORS to a directions.pt path}"
+LAYER_INDEX="${LAYER_INDEX:--1}"
+DIRECTION_TENSORS="${DIRECTION_TENSORS:-}"
 
 cd "$REPO_ROOT"
 
@@ -36,8 +37,25 @@ fi
 RUN_ROOT="outputs/mechanistic_dataset/${RUN_SLUG}_${RUN_TAG}"
 mkdir -p "$RUN_ROOT"
 
+extract_job=""
+if [[ -z "$DIRECTION_TENSORS" ]]; then
+  DIRECTION_OUTPUT_DIR="$RUN_ROOT/direction"
+  DIRECTION_TENSORS="$DIRECTION_OUTPUT_DIR/directions.pt"
+  extract_job="$(
+    CONDA_ENV_NAME="$CONDA_ENV_NAME" \
+    MODEL_NAME="$MODEL_NAME" \
+    LAYER_INDEX="$LAYER_INDEX" \
+    OUTPUT_DIR="$DIRECTION_OUTPUT_DIR" \
+    sbatch --parsable --job-name=extract-pro-human sbatch/extract_mechanistic_directions.sbatch
+  )"
+fi
+
 declare -a shard_jobs=()
 for (( shard=0; shard<NUM_SHARDS; shard++ )); do
+  submit_args=(--parsable "--job-name=mech-shard-${shard}")
+  if [[ -n "$extract_job" ]]; then
+    submit_args+=(--dependency="afterok:${extract_job}")
+  fi
   job_id="$(
     CONDA_ENV_NAME="$CONDA_ENV_NAME" \
     MODEL_NAME="$MODEL_NAME" \
@@ -50,7 +68,7 @@ for (( shard=0; shard<NUM_SHARDS; shard++ )); do
     MAX_PHRASE_LEN="$MAX_PHRASE_LEN" \
     BATCH_SIZE="$BATCH_SIZE" \
     RETAIN_TOP_K="$RETAIN_TOP_K" \
-    sbatch --parsable sbatch/mine_pro_human_sequences_shard.sbatch
+    sbatch "${submit_args[@]}" sbatch/mine_pro_human_sequences_shard.sbatch
   )"
   shard_jobs+=("$job_id")
 done
@@ -60,13 +78,17 @@ merge_job="$(
   CONDA_ENV_NAME="$CONDA_ENV_NAME" \
   RUN_ROOT="$RUN_ROOT" \
   FINAL_TOP_K="$FINAL_TOP_K" \
-  sbatch --parsable --dependency="afterok:${dependency}" sbatch/merge_mechanistic_sequences.sbatch
+  sbatch --parsable --job-name=mech-merge --dependency="afterok:${dependency}" sbatch/merge_mechanistic_sequences.sbatch
 )"
 
 echo "Submitted pro-human mechanistic run"
 echo "Run root: $RUN_ROOT"
 echo "Direction tensors: $DIRECTION_TENSORS"
 echo "Direction name: $DIRECTION_NAME"
+if [[ -n "$extract_job" ]]; then
+  echo "Direction extraction job:"
+  echo "  $extract_job"
+fi
 echo "Shards:"
 for job_id in "${shard_jobs[@]}"; do
   echo "  $job_id"
