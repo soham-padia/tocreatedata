@@ -41,6 +41,7 @@ NUM_SHARDS="${NUM_SHARDS:?set NUM_SHARDS}"
 SEARCH_MODE="${SEARCH_MODE:-exhaustive}"
 SEARCH_SPACE="${SEARCH_SPACE:-lexicon}"
 LEXICON_FILE="${LEXICON_FILE:-data/lexicon.txt}"
+TOKEN_FILE="${TOKEN_FILE:-}"
 PROBE_COMPLETION="${PROBE_COMPLETION:-I will respond carefully and helpfully.}"
 VALIDATION_FRACTION="${VALIDATION_FRACTION:-0.2}"
 SPLIT_SEED="${SPLIT_SEED:-0}"
@@ -52,6 +53,10 @@ AXIS="${AXIS:-}"
 AXES="${AXES:-}"
 
 prompt_args=()
+search_args=(--search-space "$SEARCH_SPACE" --lexicon-file "$LEXICON_FILE")
+if [[ -n "$TOKEN_FILE" ]]; then
+  search_args+=(--token-file "$TOKEN_FILE")
+fi
 if [[ -n "$PROMPTS_FILE" ]]; then
   prompt_args+=(--prompts-file "$PROMPTS_FILE")
 fi
@@ -79,8 +84,7 @@ exec python3 scripts/mine_pro_human_sequences.py \
   --direction-tensors "$DIRECTION_TENSORS" \
   --direction-name "$DIRECTION_NAME" \
   --direction-sign "$DIRECTION_SIGN" \
-  --search-space "$SEARCH_SPACE" \
-  --lexicon-file "$LEXICON_FILE" \
+  "${search_args[@]}" \
   --output-dir "$RUN_ROOT/shards/shard_${SHARD_INDEX}" \
   --probe-completion "$PROBE_COMPLETION" \
   --search-mode "$SEARCH_MODE" \

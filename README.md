@@ -75,6 +75,8 @@ There exists a subset of short text sequences that strongly move the model along
   Prompt-only view generated from `data/axes/`.
 - `data/lexicon.txt`
   Search alphabet for sequence mining. These are **lexicon units**, not raw tokenizer tokens.
+- `data/token_shortlists/*.jsonl`
+  Exact-token shortlist files for tokenizer-vocab mining.
 - `data/direction_spec.sample.json`
   Weighted lexical rubric used by the older baseline pipeline.
 
@@ -153,6 +155,27 @@ Outputs:
 
 ### 2. Mine sequences by projection score
 
+#### Build a tokenizer shortlist
+
+For tokenizer-vocab mining, do not seed from the full vocabulary directly. Build a diverse shortlist first:
+
+```bash
+python3 scripts/build_token_shortlist.py \
+  --model-name "Qwen/Qwen2.5-7B-Instruct" \
+  --output-file data/token_shortlists/qwen25_diverse_5000.jsonl \
+  --shortlist-size 5000 \
+  --weird-reserve 500 \
+  --clean-pool-size 20000 \
+  --weird-pool-size 5000
+```
+
+This creates:
+
+- a large clean bucket chosen for embedding-space diversity
+- a reserved weird/code/punctuation bucket for opaque trigger discovery
+
+The shortlist is saved as exact token IDs, so the miner can reuse it without retokenization drift.
+
 #### Exhaustive search
 
 Use this for short sequence lengths over the controlled lexicon:
@@ -196,6 +219,27 @@ Important:
 
 - `max-phrase-len=15` means **15 lexicon units**
 - it does **not** mean 15 raw tokenizer tokens
+
+#### Token-shortlist beam search
+
+To mine against a tokenizer shortlist rather than the hand-written lexicon:
+
+```bash
+python3 scripts/mine_pro_human_sequences.py \
+  --model-name "Qwen/Qwen2.5-7B-Instruct" \
+  --direction-tensors outputs/mechanistic_directions/all_axes_layer_minus1/directions.pt \
+  --direction-name global \
+  --direction-sign 1 \
+  --search-space token_file \
+  --token-file data/token_shortlists/qwen25_diverse_5000.jsonl \
+  --output-dir outputs/mechanistic_dataset/local_token_shortlist \
+  --search-mode beam \
+  --min-phrase-len 1 \
+  --max-phrase-len 3 \
+  --beam-width 32 \
+  --batch-size 32 \
+  --retain-top-k 2000
+```
 
 ### 3. Flip the direction sign
 

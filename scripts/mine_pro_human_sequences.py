@@ -50,6 +50,7 @@ class SequenceMiningConfig:
     output_dir: str
     search_space: str = "lexicon"
     lexicon_file: str = DEFAULT_LEXICON_FILE
+    token_file: str | None = None
     prompts_file: str | None = None
     pairs_path: str | None = None
     axis: str | None = None
@@ -109,8 +110,9 @@ def parse_args() -> SequenceMiningConfig:
     parser.add_argument("--direction-name", default="global")
     parser.add_argument("--direction-sign", type=float, default=1.0)
     parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--search-space", choices=("lexicon", "tokenizer_vocab"), default="lexicon")
+    parser.add_argument("--search-space", choices=("lexicon", "tokenizer_vocab", "token_file"), default="lexicon")
     parser.add_argument("--lexicon-file", default=DEFAULT_LEXICON_FILE)
+    parser.add_argument("--token-file")
     parser.add_argument("--prompts-file")
     parser.add_argument("--pairs-path")
     parser.add_argument("--axis")
@@ -151,6 +153,8 @@ def parse_args() -> SequenceMiningConfig:
         parser.error("use only one of --axis or --axes")
     if args.shard_index < 0 or args.shard_index >= args.num_shards:
         parser.error("--shard-index must be in [0, num_shards)")
+    if args.search_space == "token_file" and not args.token_file:
+        parser.error("--token-file is required when --search-space=token_file")
 
     return SequenceMiningConfig(**vars(args))
 
@@ -265,6 +269,39 @@ def load_search_units(config: SequenceMiningConfig, tokenizer) -> list[SearchUni
             if entry.strip()
         ]
         return [unit for unit in units if unit.token_ids]
+
+    if config.search_space == "token_file":
+        from humanity_direction.data import load_jsonl
+
+        rows = load_jsonl(config.token_file)
+        units: list[SearchUnit] = []
+        for row in rows:
+            token_ids = row.get("token_ids")
+            if token_ids is None:
+                token_id = row.get("token_id")
+                if token_id is None:
+                    raise ValueError(f"token row missing token_id/token_ids: {row}")
+                token_ids = [int(token_id)]
+            token_ids_tuple = tuple(int(token_id) for token_id in token_ids)
+            if not token_ids_tuple:
+                continue
+            decoded_text = row.get("decoded_text")
+            if decoded_text is None:
+                decoded_text = tokenizer.decode(
+                    list(token_ids_tuple),
+                    skip_special_tokens=False,
+                    clean_up_tokenization_spaces=False,
+                )
+            label = row.get("token") or row.get("label") or decoded_text
+            units.append(
+                SearchUnit(
+                    index=int(row.get("token_id", token_ids_tuple[0])),
+                    label=label,
+                    decoded_text=decoded_text,
+                    token_ids=token_ids_tuple,
+                )
+            )
+        return units
 
     special_ids = set(getattr(tokenizer, "all_special_ids", []) or [])
     vocab = tokenizer.get_vocab()
@@ -555,6 +592,7 @@ def load_checkpoint(
     keys_to_match = (
         "search_space",
         "lexicon_file",
+        "token_file",
         "search_mode",
         "min_phrase_len",
         "max_phrase_len",
