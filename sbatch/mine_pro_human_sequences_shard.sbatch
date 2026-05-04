@@ -38,6 +38,30 @@ RUN_ROOT="${RUN_ROOT:?set RUN_ROOT to an output root directory}"
 SHARD_INDEX="${SHARD_INDEX:?set SHARD_INDEX}"
 NUM_SHARDS="${NUM_SHARDS:?set NUM_SHARDS}"
 SEARCH_MODE="${SEARCH_MODE:-exhaustive}"
+SEARCH_SPACE="${SEARCH_SPACE:-lexicon}"
+LEXICON_FILE="${LEXICON_FILE:-data/lexicon.txt}"
+PROBE_COMPLETION="${PROBE_COMPLETION:-I will respond carefully and helpfully.}"
+VALIDATION_FRACTION="${VALIDATION_FRACTION:-0.2}"
+SPLIT_SEED="${SPLIT_SEED:-0}"
+EXPANSION_ALPHABET_SIZE="${EXPANSION_ALPHABET_SIZE:-256}"
+PROMPTS_FILE="${PROMPTS_FILE:-}"
+PAIRS_PATH="${PAIRS_PATH:-}"
+AXIS="${AXIS:-}"
+AXES="${AXES:-}"
+
+prompt_args=()
+if [[ -n "$PROMPTS_FILE" ]]; then
+  prompt_args+=(--prompts-file "$PROMPTS_FILE")
+fi
+if [[ -n "$PAIRS_PATH" ]]; then
+  prompt_args+=(--pairs-path "$PAIRS_PATH")
+fi
+if [[ -n "$AXIS" ]]; then
+  prompt_args+=(--axis "$AXIS")
+fi
+if [[ -n "$AXES" ]]; then
+  prompt_args+=(--axes "$AXES")
+fi
 
 nvidia-smi || true
 python - <<'PY'
@@ -53,13 +77,19 @@ python3 scripts/mine_pro_human_sequences.py \
   --direction-tensors "$DIRECTION_TENSORS" \
   --direction-name "$DIRECTION_NAME" \
   --direction-sign "$DIRECTION_SIGN" \
-  --lexicon-file data/lexicon.txt \
+  --search-space "$SEARCH_SPACE" \
+  --lexicon-file "$LEXICON_FILE" \
   --output-dir "$RUN_ROOT/shards/shard_${SHARD_INDEX}" \
+  --probe-completion "$PROBE_COMPLETION" \
   --search-mode "$SEARCH_MODE" \
   --min-phrase-len "${MIN_PHRASE_LEN:-1}" \
   --max-phrase-len "${MAX_PHRASE_LEN:-5}" \
   --batch-size "${BATCH_SIZE:-128}" \
   --retain-top-k "${RETAIN_TOP_K:-5000}" \
   --beam-width "${BEAM_WIDTH:-128}" \
+  --expansion-alphabet-size "$EXPANSION_ALPHABET_SIZE" \
+  --validation-fraction "$VALIDATION_FRACTION" \
+  --split-seed "$SPLIT_SEED" \
   --shard-index "$SHARD_INDEX" \
-  --num-shards "$NUM_SHARDS"
+  --num-shards "$NUM_SHARDS" \
+  "${prompt_args[@]}"

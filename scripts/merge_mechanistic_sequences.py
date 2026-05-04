@@ -32,9 +32,12 @@ def main() -> None:
     for file_path in shard_files:
         rows = load_jsonl(file_path)
         for row in rows:
-            current = best_by_phrase.get(row["steering_sentence"])
-            if current is None or row["mechanistic_score"] > current["mechanistic_score"]:
-                best_by_phrase[row["steering_sentence"]] = row
+            key = row.get("candidate_key", row["steering_sentence"])
+            current = best_by_phrase.get(key)
+            row_selection = row.get("selection_score", row["mechanistic_score"])
+            current_selection = None if current is None else current.get("selection_score", current["mechanistic_score"])
+            if current is None or row_selection > current_selection:
+                best_by_phrase[key] = row
         summary_path = file_path.parent / "summary.json"
         if summary_path.exists():
             with summary_path.open("r", encoding="utf-8") as handle:
@@ -42,7 +45,10 @@ def main() -> None:
 
     final_rows = sorted(
         best_by_phrase.values(),
-        key=lambda row: row["mechanistic_score"],
+        key=lambda row: (
+            row.get("selection_score", row["mechanistic_score"]),
+            row["mechanistic_score"],
+        ),
         reverse=True,
     )[: args.final_top_k]
 
@@ -58,6 +64,7 @@ def main() -> None:
                 "num_unique_candidates": len(best_by_phrase),
                 "final_top_k": args.final_top_k,
                 "best_score": final_rows[0]["mechanistic_score"] if final_rows else None,
+                "best_selection_score": final_rows[0].get("selection_score") if final_rows else None,
                 "shards": shard_summaries,
             },
             handle,

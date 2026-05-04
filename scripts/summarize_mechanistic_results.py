@@ -126,7 +126,12 @@ def load_summary(path: Path) -> dict:
 def load_run(root: Path, label: str, lexicon: list[str]) -> RunData:
     rows = load_jsonl(root / "top_sentences.jsonl")
     summary = load_summary(root / "summary.json")
-    segmented_units = [segment_sequence(row["steering_sentence"], lexicon, int(row["length"])) for row in rows]
+    segmented_units = [
+        list(row["unit_sequence"])
+        if isinstance(row.get("unit_sequence"), list) and row["unit_sequence"]
+        else segment_sequence(row["steering_sentence"], lexicon, int(row["length"]))
+        for row in rows
+    ]
     return RunData(
         label=label,
         root=root,
@@ -167,8 +172,17 @@ def summarize_run(run: RunData) -> dict:
     rows = run.rows
     segmented = run.segmented_units
     scores = [float(row["mechanistic_score"]) for row in rows]
+    selection_scores = [
+        float(row.get("selection_score", row["mechanistic_score"]))
+        for row in rows
+    ]
     delta_norms = [float(row["activation_delta_norm"]) for row in rows]
     lengths = [int(row["length"]) for row in rows]
+    validation_scores = [
+        float(row["validation_mechanistic_score"])
+        for row in rows
+        if row.get("validation_mechanistic_score") is not None
+    ]
 
     unit_counter: Counter[str] = Counter()
     unit_score_totals: defaultdict[str, float] = defaultdict(float)
@@ -237,7 +251,10 @@ def summarize_run(run: RunData) -> dict:
         "direction_name": rows[0]["direction_name"] if rows else None,
         "direction_sign": rows[0].get("direction_sign") if rows else None,
         "search_mode": rows[0].get("search_mode") if rows else None,
+        "search_space": rows[0].get("search_space") if rows else None,
         "score_stats": numeric_stats(scores),
+        "selection_score_stats": numeric_stats(selection_scores),
+        "validation_score_stats": numeric_stats(validation_scores),
         "delta_norm_stats": numeric_stats(delta_norms),
         "length_stats": numeric_stats([float(length) for length in lengths]),
         "top_slice_score_means": {
@@ -338,6 +355,7 @@ def render_markdown(run_summaries: list[dict], comparison: dict, top_show: int) 
         lines.append(f"- Direction: `{summary['direction_name']}`")
         lines.append(f"- Direction sign: `{summary['direction_sign']}`")
         lines.append(f"- Search mode: `{summary['search_mode']}`")
+        lines.append(f"- Search space: `{summary['search_space']}`")
         lines.append(f"- Rows: `{summary['num_rows']}`")
         lines.append(f"- Segmentation failures: `{summary['segmentation_failures']}`")
         lines.append("")
@@ -352,6 +370,15 @@ def render_markdown(run_summaries: list[dict], comparison: dict, top_show: int) 
             f"p75={score_stats['p75']:.4f} p90={score_stats['p90']:.4f}"
         )
         lines.append("")
+        if summary["validation_score_stats"]:
+            validation_stats = summary["validation_score_stats"]
+            lines.append("### Validation Score Stats")
+            lines.append(
+                f"- mean={validation_stats['mean']:.4f} median={validation_stats['median']:.4f} "
+                f"min={validation_stats['min']:.4f} max={validation_stats['max']:.4f} "
+                f"stdev={validation_stats['stdev']:.4f}"
+            )
+            lines.append("")
         lines.append("### Delta-Norm Stats")
         delta_stats = summary["delta_norm_stats"]
         lines.append(

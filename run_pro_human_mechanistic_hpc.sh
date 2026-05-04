@@ -15,6 +15,16 @@ RETAIN_TOP_K="${RETAIN_TOP_K:-5000}"
 FINAL_TOP_K="${FINAL_TOP_K:-1000}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
 DIRECTION_SIGN="${DIRECTION_SIGN:-1}"
+SEARCH_SPACE="${SEARCH_SPACE:-lexicon}"
+LEXICON_FILE="${LEXICON_FILE:-data/lexicon.txt}"
+PROBE_COMPLETION="${PROBE_COMPLETION:-I will respond carefully and helpfully.}"
+VALIDATION_FRACTION="${VALIDATION_FRACTION:-0.2}"
+SPLIT_SEED="${SPLIT_SEED:-0}"
+EXPANSION_ALPHABET_SIZE="${EXPANSION_ALPHABET_SIZE:-256}"
+PROMPTS_FILE="${PROMPTS_FILE:-}"
+PAIRS_PATH="${PAIRS_PATH:-data/axes}"
+AXIS="${AXIS:-}"
+AXES="${AXES:-}"
 LAYER_INDEX="${LAYER_INDEX:--1}"
 DIRECTION_TENSORS="${DIRECTION_TENSORS:-}"
 EXTRACT_TIME="${EXTRACT_TIME:-01:00:00}"
@@ -22,6 +32,19 @@ SHARD_TIME="${SHARD_TIME:-01:00:00}"
 MERGE_TIME="${MERGE_TIME:-00:20:00}"
 SEARCH_MODE="${SEARCH_MODE:-exhaustive}"
 BEAM_WIDTH="${BEAM_WIDTH:-128}"
+
+declare -a submitted_jobs=()
+
+cleanup_partial_submissions() {
+  local exit_code=$?
+  if (( exit_code == 0 || ${#submitted_jobs[@]} == 0 )); then
+    return
+  fi
+  echo "Submission failed. Cancelling partially submitted jobs: ${submitted_jobs[*]}" >&2
+  scancel "${submitted_jobs[@]}" >/dev/null 2>&1 || true
+}
+
+trap cleanup_partial_submissions ERR
 
 cd "$REPO_ROOT"
 
@@ -54,6 +77,7 @@ if [[ -z "$DIRECTION_TENSORS" ]]; then
     OUTPUT_DIR="$DIRECTION_OUTPUT_DIR" \
     sbatch --parsable --job-name=extract-pro-human --time="$EXTRACT_TIME" sbatch/extract_mechanistic_directions.sbatch
   )"
+  submitted_jobs+=("$extract_job")
 fi
 
 declare -a shard_jobs=()
@@ -68,6 +92,16 @@ for (( shard=0; shard<NUM_SHARDS; shard++ )); do
     DIRECTION_TENSORS="$DIRECTION_TENSORS" \
     DIRECTION_NAME="$DIRECTION_NAME" \
     DIRECTION_SIGN="$DIRECTION_SIGN" \
+    SEARCH_SPACE="$SEARCH_SPACE" \
+    LEXICON_FILE="$LEXICON_FILE" \
+    PROBE_COMPLETION="$PROBE_COMPLETION" \
+    VALIDATION_FRACTION="$VALIDATION_FRACTION" \
+    SPLIT_SEED="$SPLIT_SEED" \
+    EXPANSION_ALPHABET_SIZE="$EXPANSION_ALPHABET_SIZE" \
+    PROMPTS_FILE="$PROMPTS_FILE" \
+    PAIRS_PATH="$PAIRS_PATH" \
+    AXIS="$AXIS" \
+    AXES="$AXES" \
     RUN_ROOT="$RUN_ROOT" \
     SHARD_INDEX="$shard" \
     NUM_SHARDS="$NUM_SHARDS" \
@@ -80,6 +114,7 @@ for (( shard=0; shard<NUM_SHARDS; shard++ )); do
     sbatch "${submit_args[@]}" sbatch/mine_pro_human_sequences_shard.sbatch
   )"
   shard_jobs+=("$job_id")
+  submitted_jobs+=("$job_id")
 done
 
 dependency="$(IFS=:; echo "${shard_jobs[*]}")"
@@ -89,12 +124,16 @@ merge_job="$(
   FINAL_TOP_K="$FINAL_TOP_K" \
   sbatch --parsable --job-name=mech-merge --time="$MERGE_TIME" --dependency="afterok:${dependency}" sbatch/merge_mechanistic_sequences.sbatch
 )"
+submitted_jobs+=("$merge_job")
+
+trap - ERR
 
 echo "Submitted pro-human mechanistic run"
 echo "Run root: $RUN_ROOT"
 echo "Direction tensors: $DIRECTION_TENSORS"
 echo "Direction name: $DIRECTION_NAME"
 echo "Direction sign: $DIRECTION_SIGN"
+echo "Search space: $SEARCH_SPACE"
 echo "Search mode: $SEARCH_MODE"
 echo "Beam width: $BEAM_WIDTH"
 echo "Times: extract=$EXTRACT_TIME shards=$SHARD_TIME merge=$MERGE_TIME"

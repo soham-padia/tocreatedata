@@ -22,6 +22,12 @@ def build_injected_prompt(user_prompt: str, phrase: str) -> str:
     return build_chat_prompt(user_prompt, system_prompt=injected_system)
 
 
+def build_injected_prompt_parts(user_prompt: str) -> tuple[str, str]:
+    prefix = f"<|system|>\n{SYSTEM_PROMPT} Additional steering phrase: "
+    suffix = f".\n<|user|>\n{user_prompt.strip()}\n<|assistant|>\n"
+    return prefix, suffix
+
+
 def build_training_example(prompt: str, completion: str) -> tuple[str, str]:
     prefix = build_chat_prompt(prompt)
     full_text = f"{prefix}{completion.strip()}"
