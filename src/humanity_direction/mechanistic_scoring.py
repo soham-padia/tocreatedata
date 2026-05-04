@@ -6,7 +6,7 @@ import torch
 
 
 def load_direction_vector(path: str | Path, direction_name: str = "global") -> tuple[torch.Tensor, dict]:
-    payload = torch.load(Path(path), map_location="cpu")
+    payload = torch.load(Path(path), map_location="cpu", weights_only=True)
     if direction_name == "global":
         vector = payload["global"]
     else:

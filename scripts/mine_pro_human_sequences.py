@@ -5,6 +5,7 @@ import heapq
 import json
 import sys
 from dataclasses import asdict, dataclass
+from itertools import count
 from itertools import product
 from pathlib import Path
 
@@ -90,8 +91,13 @@ def batched(items, batch_size: int):
         yield batch
 
 
-def push_candidate(heap: list[tuple[float, dict]], keep_top_k: int, row: dict) -> None:
-    item = (float(row["mechanistic_score"]), row)
+def push_candidate(
+    heap: list[tuple[float, int, dict]],
+    keep_top_k: int,
+    row: dict,
+    tie_breaker: count,
+) -> None:
+    item = (float(row["mechanistic_score"]), next(tie_breaker), row)
     if len(heap) < keep_top_k:
         heapq.heappush(heap, item)
         return
@@ -123,7 +129,8 @@ def main() -> None:
     )[0]
 
     total_sequences = 0
-    retained: list[tuple[float, dict]] = []
+    retained: list[tuple[float, int, dict]] = []
+    tie_breaker = count()
 
     for batch in batched(
         sequence_generator(
@@ -170,6 +177,7 @@ def main() -> None:
                     "first_term_index": int(first_idx),
                     "carrier_prompt": config.carrier_prompt,
                 },
+                tie_breaker,
             )
             total_sequences += 1
 
@@ -180,7 +188,7 @@ def main() -> None:
                 f"current_best={current_best:.4f}"
             )
 
-    retained_rows = [row for _, row in sorted(retained, key=lambda item: item[0], reverse=True)]
+    retained_rows = [row for _, _, row in sorted(retained, key=lambda item: item[0], reverse=True)]
 
     output_dir = Path(config.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
