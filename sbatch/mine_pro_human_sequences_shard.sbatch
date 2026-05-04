@@ -33,9 +33,11 @@ export PYTHONUNBUFFERED=1
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 DIRECTION_TENSORS="${DIRECTION_TENSORS:?set DIRECTION_TENSORS to a directions.pt path}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
+DIRECTION_SIGN="${DIRECTION_SIGN:-1}"
 RUN_ROOT="${RUN_ROOT:?set RUN_ROOT to an output root directory}"
 SHARD_INDEX="${SHARD_INDEX:?set SHARD_INDEX}"
 NUM_SHARDS="${NUM_SHARDS:?set NUM_SHARDS}"
+SEARCH_MODE="${SEARCH_MODE:-exhaustive}"
 
 nvidia-smi || true
 python - <<'PY'
@@ -50,11 +52,14 @@ python3 scripts/mine_pro_human_sequences.py \
   --model-name "$MODEL_NAME" \
   --direction-tensors "$DIRECTION_TENSORS" \
   --direction-name "$DIRECTION_NAME" \
+  --direction-sign "$DIRECTION_SIGN" \
   --lexicon-file data/lexicon.txt \
   --output-dir "$RUN_ROOT/shards/shard_${SHARD_INDEX}" \
+  --search-mode "$SEARCH_MODE" \
   --min-phrase-len "${MIN_PHRASE_LEN:-1}" \
   --max-phrase-len "${MAX_PHRASE_LEN:-5}" \
   --batch-size "${BATCH_SIZE:-128}" \
   --retain-top-k "${RETAIN_TOP_K:-5000}" \
+  --beam-width "${BEAM_WIDTH:-128}" \
   --shard-index "$SHARD_INDEX" \
   --num-shards "$NUM_SHARDS"

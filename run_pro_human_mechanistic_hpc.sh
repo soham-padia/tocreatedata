@@ -14,11 +14,14 @@ BATCH_SIZE="${BATCH_SIZE:-128}"
 RETAIN_TOP_K="${RETAIN_TOP_K:-5000}"
 FINAL_TOP_K="${FINAL_TOP_K:-1000}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
+DIRECTION_SIGN="${DIRECTION_SIGN:-1}"
 LAYER_INDEX="${LAYER_INDEX:--1}"
 DIRECTION_TENSORS="${DIRECTION_TENSORS:-}"
 EXTRACT_TIME="${EXTRACT_TIME:-01:00:00}"
 SHARD_TIME="${SHARD_TIME:-01:00:00}"
 MERGE_TIME="${MERGE_TIME:-00:20:00}"
+SEARCH_MODE="${SEARCH_MODE:-exhaustive}"
+BEAM_WIDTH="${BEAM_WIDTH:-128}"
 
 cd "$REPO_ROOT"
 
@@ -64,13 +67,16 @@ for (( shard=0; shard<NUM_SHARDS; shard++ )); do
     MODEL_NAME="$MODEL_NAME" \
     DIRECTION_TENSORS="$DIRECTION_TENSORS" \
     DIRECTION_NAME="$DIRECTION_NAME" \
+    DIRECTION_SIGN="$DIRECTION_SIGN" \
     RUN_ROOT="$RUN_ROOT" \
     SHARD_INDEX="$shard" \
     NUM_SHARDS="$NUM_SHARDS" \
+    SEARCH_MODE="$SEARCH_MODE" \
     MIN_PHRASE_LEN="$MIN_PHRASE_LEN" \
     MAX_PHRASE_LEN="$MAX_PHRASE_LEN" \
     BATCH_SIZE="$BATCH_SIZE" \
     RETAIN_TOP_K="$RETAIN_TOP_K" \
+    BEAM_WIDTH="$BEAM_WIDTH" \
     sbatch "${submit_args[@]}" sbatch/mine_pro_human_sequences_shard.sbatch
   )"
   shard_jobs+=("$job_id")
@@ -88,6 +94,9 @@ echo "Submitted pro-human mechanistic run"
 echo "Run root: $RUN_ROOT"
 echo "Direction tensors: $DIRECTION_TENSORS"
 echo "Direction name: $DIRECTION_NAME"
+echo "Direction sign: $DIRECTION_SIGN"
+echo "Search mode: $SEARCH_MODE"
+echo "Beam width: $BEAM_WIDTH"
 echo "Times: extract=$EXTRACT_TIME shards=$SHARD_TIME merge=$MERGE_TIME"
 if [[ -n "$extract_job" ]]; then
   echo "Direction extraction job:"
