@@ -16,6 +16,9 @@ FINAL_TOP_K="${FINAL_TOP_K:-1000}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
 LAYER_INDEX="${LAYER_INDEX:--1}"
 DIRECTION_TENSORS="${DIRECTION_TENSORS:-}"
+EXTRACT_TIME="${EXTRACT_TIME:-01:00:00}"
+SHARD_TIME="${SHARD_TIME:-01:00:00}"
+MERGE_TIME="${MERGE_TIME:-00:20:00}"
 
 cd "$REPO_ROOT"
 
@@ -46,13 +49,13 @@ if [[ -z "$DIRECTION_TENSORS" ]]; then
     MODEL_NAME="$MODEL_NAME" \
     LAYER_INDEX="$LAYER_INDEX" \
     OUTPUT_DIR="$DIRECTION_OUTPUT_DIR" \
-    sbatch --parsable --job-name=extract-pro-human sbatch/extract_mechanistic_directions.sbatch
+    sbatch --parsable --job-name=extract-pro-human --time="$EXTRACT_TIME" sbatch/extract_mechanistic_directions.sbatch
   )"
 fi
 
 declare -a shard_jobs=()
 for (( shard=0; shard<NUM_SHARDS; shard++ )); do
-  submit_args=(--parsable "--job-name=mech-shard-${shard}")
+  submit_args=(--parsable "--job-name=mech-shard-${shard}" "--time=${SHARD_TIME}")
   if [[ -n "$extract_job" ]]; then
     submit_args+=(--dependency="afterok:${extract_job}")
   fi
@@ -78,13 +81,14 @@ merge_job="$(
   CONDA_ENV_NAME="$CONDA_ENV_NAME" \
   RUN_ROOT="$RUN_ROOT" \
   FINAL_TOP_K="$FINAL_TOP_K" \
-  sbatch --parsable --job-name=mech-merge --dependency="afterok:${dependency}" sbatch/merge_mechanistic_sequences.sbatch
+  sbatch --parsable --job-name=mech-merge --time="$MERGE_TIME" --dependency="afterok:${dependency}" sbatch/merge_mechanistic_sequences.sbatch
 )"
 
 echo "Submitted pro-human mechanistic run"
 echo "Run root: $RUN_ROOT"
 echo "Direction tensors: $DIRECTION_TENSORS"
 echo "Direction name: $DIRECTION_NAME"
+echo "Times: extract=$EXTRACT_TIME shards=$SHARD_TIME merge=$MERGE_TIME"
 if [[ -n "$extract_job" ]]; then
   echo "Direction extraction job:"
   echo "  $extract_job"
