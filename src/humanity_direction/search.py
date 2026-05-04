@@ -29,18 +29,20 @@ def beam_search_phrases(
     beam_width: int = 8,
     max_phrase_len: int = 3,
     min_improvement: float = 0.0,
+    keep_top_k: int | None = None,
+    joiner: str = " | ",
 ) -> list[CandidateResult]:
     seed_terms = _dedupe_preserve_order(seed_terms)
     frontier = [CandidateResult(phrase=term, score=scorer(term), depth=1) for term in seed_terms]
     frontier.sort(key=lambda item: item.score, reverse=True)
     beam = frontier[:beam_width]
-    best_by_phrase = {item.phrase: item for item in beam}
+    best_by_phrase = {item.phrase: item for item in frontier}
 
     for depth in range(2, max_phrase_len + 1):
         proposals: list[CandidateResult] = []
         for parent in beam:
             for term in seed_terms:
-                phrase = f"{parent.phrase} | {term}"
+                phrase = f"{parent.phrase}{joiner}{term}"
                 score = scorer(phrase)
                 if score < parent.score + min_improvement:
                     continue
@@ -56,4 +58,7 @@ def beam_search_phrases(
             if current is None or item.score > current.score:
                 best_by_phrase[item.phrase] = item
 
-    return sorted(best_by_phrase.values(), key=lambda item: item.score, reverse=True)
+    ranked = sorted(best_by_phrase.values(), key=lambda item: item.score, reverse=True)
+    if keep_top_k is not None:
+        return ranked[:keep_top_k]
+    return ranked

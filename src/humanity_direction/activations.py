@@ -22,6 +22,34 @@ def load_model_and_tokenizer(model_name: str, device: str):
 
 
 @torch.no_grad()
+def batch_terminal_activations(
+    model: Any,
+    tokenizer: Any,
+    texts: list[str],
+    layer_index: int,
+    device: str,
+) -> torch.Tensor:
+    encoded = tokenizer(
+        texts,
+        padding=True,
+        truncation=True,
+        return_tensors="pt",
+    )
+    input_ids = encoded["input_ids"].to(device)
+    attention_mask = encoded["attention_mask"].to(device)
+    outputs = model(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        output_hidden_states=True,
+        use_cache=False,
+    )
+    hidden_states = outputs.hidden_states[layer_index]
+    lengths = attention_mask.sum(dim=1) - 1
+    gathered = hidden_states[torch.arange(hidden_states.shape[0], device=device), lengths]
+    return gathered.detach().float().cpu()
+
+
+@torch.no_grad()
 def mean_completion_activation(
     model: Any,
     tokenizer: Any,
