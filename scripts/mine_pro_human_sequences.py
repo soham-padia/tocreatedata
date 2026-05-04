@@ -181,18 +181,34 @@ def compute_suffix_activations_batched(
     batch_size: int,
 ) -> torch.Tensor:
     chunks: list[torch.Tensor] = []
-    for start in range(0, len(token_sequences), batch_size):
-        end = start + batch_size
-        chunks.append(
-            batch_mean_suffix_activation_from_token_ids(
-                model=model,
-                tokenizer=tokenizer,
-                token_id_sequences=token_sequences[start:end],
-                suffix_lengths=suffix_lengths[start:end],
-                layer_index=layer_index,
-                device=device,
+    current_batch_size = batch_size
+    start = 0
+    while start < len(token_sequences):
+        end = min(len(token_sequences), start + current_batch_size)
+        try:
+            chunks.append(
+                batch_mean_suffix_activation_from_token_ids(
+                    model=model,
+                    tokenizer=tokenizer,
+                    token_id_sequences=token_sequences[start:end],
+                    suffix_lengths=suffix_lengths[start:end],
+                    layer_index=layer_index,
+                    device=device,
+                )
             )
-        )
+            start = end
+        except torch.OutOfMemoryError:
+            if device != "cuda" or current_batch_size <= 1:
+                raise
+            next_batch_size = max(1, current_batch_size // 2)
+            if next_batch_size == current_batch_size:
+                raise
+            torch.cuda.empty_cache()
+            print(
+                f"CUDA OOM while scoring sequences {start}:{end}; "
+                f"retrying with batch_size={next_batch_size}"
+            )
+            current_batch_size = next_batch_size
     if not chunks:
         raise ValueError("cannot compute activations for an empty token batch")
     return torch.cat(chunks, dim=0)

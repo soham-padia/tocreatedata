@@ -9,7 +9,7 @@
 #SBATCH --signal=TERM@120
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:v100-sxm2:1
 
 set -euo pipefail
 
@@ -31,6 +31,7 @@ else
 fi
 
 export PYTHONUNBUFFERED=1
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 DIRECTION_TENSORS="${DIRECTION_TENSORS:?set DIRECTION_TENSORS to a directions.pt path}"
 DIRECTION_NAME="${DIRECTION_NAME:-global}"
