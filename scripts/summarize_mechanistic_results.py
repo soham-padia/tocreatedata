@@ -4,7 +4,6 @@ import argparse
 import json
 import math
 import statistics
-import sys
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime
@@ -12,20 +11,31 @@ from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from humanity_direction.data import load_jsonl, load_lines
 
 
-@dataclass(slots=True)
+@dataclass
 class RunData:
     label: str
     root: Path
     rows: list[dict]
     summary: dict
     segmented_units: list[list[str]]
+
+
+def load_jsonl(path: str | Path) -> list[dict]:
+    records: list[dict] = []
+    with Path(path).open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            records.append(json.loads(line))
+    return records
+
+
+def load_lines(path: str | Path) -> list[str]:
+    with Path(path).open("r", encoding="utf-8") as handle:
+        return [line.strip() for line in handle if line.strip()]
 
 
 def parse_args() -> argparse.Namespace:
