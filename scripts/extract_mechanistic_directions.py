@@ -7,6 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -93,7 +94,14 @@ def main() -> None:
         axis_vectors[axis_name] = direction
 
         unit = direction / direction.norm().clamp_min(1e-12)
-        mean_projection = float((stacked @ unit).mean().item())
+        projections = stacked @ unit
+        pair_norms = stacked.norm(dim=1)
+        mean_projection = float(projections.mean().item())
+        std_projection = float(projections.std(unbiased=False).item())
+        min_projection = float(projections.min().item())
+        max_projection = float(projections.max().item())
+        mean_pair_norm = float(pair_norms.mean().item())
+        mean_cosine = float(F.cosine_similarity(stacked, direction.unsqueeze(0), dim=1).mean().item())
         summary_rows.append(
             {
                 "axis": axis_name,
@@ -101,11 +109,17 @@ def main() -> None:
                 "layer_index": args.layer_index,
                 "vector_norm": norm,
                 "mean_pair_projection": mean_projection,
+                "std_pair_projection": std_projection,
+                "min_pair_projection": min_projection,
+                "max_pair_projection": max_projection,
+                "mean_pair_norm": mean_pair_norm,
+                "mean_cosine_to_direction": mean_cosine,
             }
         )
         print(
             f"axis={axis_name} pairs={len(axis_rows)} "
-            f"vector_norm={norm:.4f} mean_pair_projection={mean_projection:.4f}"
+            f"vector_norm={norm:.4f} mean_pair_projection={mean_projection:.4f} "
+            f"std_pair_projection={std_projection:.4f} mean_cosine={mean_cosine:.4f}"
         )
 
     global_direction = torch.stack(all_diffs).mean(dim=0)
