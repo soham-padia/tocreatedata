@@ -6,6 +6,7 @@
 #SBATCH --output=sbatch/logs/%x-%j.out
 #SBATCH --error=sbatch/logs/%x-%j.err
 #SBATCH --time=08:00:00
+#SBATCH --signal=TERM@120
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --gres=gpu:1
@@ -44,6 +45,7 @@ PROBE_COMPLETION="${PROBE_COMPLETION:-I will respond carefully and helpfully.}"
 VALIDATION_FRACTION="${VALIDATION_FRACTION:-0.2}"
 SPLIT_SEED="${SPLIT_SEED:-0}"
 EXPANSION_ALPHABET_SIZE="${EXPANSION_ALPHABET_SIZE:-256}"
+CHECKPOINT_EVERY_BATCHES="${CHECKPOINT_EVERY_BATCHES:-25}"
 PROMPTS_FILE="${PROMPTS_FILE:-}"
 PAIRS_PATH="${PAIRS_PATH:-}"
 AXIS="${AXIS:-}"
@@ -72,7 +74,7 @@ print("cuda available:", torch.cuda.is_available())
 print("device count:", torch.cuda.device_count())
 PY
 
-python3 scripts/mine_pro_human_sequences.py \
+exec python3 scripts/mine_pro_human_sequences.py \
   --model-name "$MODEL_NAME" \
   --direction-tensors "$DIRECTION_TENSORS" \
   --direction-name "$DIRECTION_NAME" \
@@ -90,6 +92,7 @@ python3 scripts/mine_pro_human_sequences.py \
   --expansion-alphabet-size "$EXPANSION_ALPHABET_SIZE" \
   --validation-fraction "$VALIDATION_FRACTION" \
   --split-seed "$SPLIT_SEED" \
+  --checkpoint-every-batches "$CHECKPOINT_EVERY_BATCHES" \
   --shard-index "$SHARD_INDEX" \
   --num-shards "$NUM_SHARDS" \
   "${prompt_args[@]}"

@@ -4,6 +4,7 @@ import argparse
 import heapq
 import json
 import random
+import signal
 import sys
 from dataclasses import asdict, dataclass
 from itertools import count, product
@@ -32,6 +33,12 @@ DEFAULT_CARRIER_PROMPT = "Please continue with a helpful response."
 DEFAULT_LEXICON_FILE = "data/lexicon.txt"
 DEFAULT_PAIRS_PATH = "data/axes"
 DEFAULT_PROBE_COMPLETION = "I will respond carefully and helpfully."
+DEFAULT_CHECKPOINT_EVERY_BATCHES = 25
+CHECKPOINT_FILE = "checkpoint.json"
+PARTIAL_ROWS_FILE = "retained_candidates.partial.jsonl"
+PARTIAL_SUMMARY_FILE = "summary.partial.json"
+
+STOP_REQUESTED = False
 
 
 @dataclass(slots=True)
@@ -58,6 +65,7 @@ class SequenceMiningConfig:
     expansion_alphabet_size: int = 256
     validation_fraction: float = 0.2
     split_seed: int = 0
+    checkpoint_every_batches: int = DEFAULT_CHECKPOINT_EVERY_BATCHES
     shard_index: int = 0
     num_shards: int = 1
 
@@ -87,6 +95,11 @@ class CandidateSpec:
     length: int
 
 
+def request_stop(_signum, _frame) -> None:
+    global STOP_REQUESTED
+    STOP_REQUESTED = True
+
+
 def parse_args() -> SequenceMiningConfig:
     parser = argparse.ArgumentParser(
         description="Mine mechanistic steering sequences against a saved direction vector."
@@ -113,6 +126,7 @@ def parse_args() -> SequenceMiningConfig:
     parser.add_argument("--expansion-alphabet-size", type=int, default=256)
     parser.add_argument("--validation-fraction", type=float, default=0.2)
     parser.add_argument("--split-seed", type=int, default=0)
+    parser.add_argument("--checkpoint-every-batches", type=int, default=DEFAULT_CHECKPOINT_EVERY_BATCHES)
     parser.add_argument("--shard-index", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     args = parser.parse_args()
@@ -131,6 +145,8 @@ def parse_args() -> SequenceMiningConfig:
         parser.error("--expansion-alphabet-size must be >= 1")
     if args.validation_fraction < 0 or args.validation_fraction >= 1:
         parser.error("--validation-fraction must be in [0, 1)")
+    if args.checkpoint_every_batches < 1:
+        parser.error("--checkpoint-every-batches must be >= 1")
     if args.axis and args.axes:
         parser.error("use only one of --axis or --axes")
     if args.shard_index < 0 or args.shard_index >= args.num_shards:
@@ -315,6 +331,49 @@ def candidate_key(candidate: CandidateSpec) -> str:
     return ",".join(str(token_id) for token_id in candidate.token_ids)
 
 
+def row_to_candidate(row: dict) -> CandidateSpec:
+    return CandidateSpec(
+        unit_positions=tuple(int(position) for position in row["unit_positions"]),
+        unit_sequence=list(row.get("unit_sequence", [])),
+        steering_sentence=row["steering_sentence"],
+        token_ids=tuple(int(token_id) for token_id in row["token_ids"]),
+        first_unit_index=int(row["first_unit_index"]),
+        length=int(row["length"]),
+    )
+
+
+def top_rows_from_heap(heap: list[tuple[float, int, dict]]) -> list[dict]:
+    return [row for _, _, row in sorted(heap, key=lambda item: item[0], reverse=True)]
+
+
+def rebuild_heap(rows: list[dict], field: str, keep_top_k: int) -> tuple[list[tuple[float, int, dict]], count]:
+    heap: list[tuple[float, int, dict]] = []
+    tie_breaker = count()
+    for row in rows:
+        item = (float(row[field]), next(tie_breaker), row)
+        if len(heap) < keep_top_k:
+            heapq.heappush(heap, item)
+        elif item[0] > heap[0][0]:
+            heapq.heapreplace(heap, item)
+    return heap, tie_breaker
+
+
+def push_scored_row(
+    heap: list[tuple[float, int, dict]],
+    keep_top_k: int,
+    row: dict,
+    tie_breaker,
+    field: str,
+) -> None:
+    item = (float(row[field]), next(tie_breaker), row)
+    if len(heap) < keep_top_k:
+        heapq.heappush(heap, item)
+        return
+    if item[0] <= heap[0][0]:
+        return
+    heapq.heapreplace(heap, item)
+
+
 def build_full_sequences(
     candidates: list[CandidateSpec],
     prompt_specs: list[PromptSpec],
@@ -362,13 +421,7 @@ def push_candidate(
     row: dict,
     tie_breaker,
 ) -> None:
-    item = (float(row["selection_score"]), next(tie_breaker), row)
-    if len(heap) < keep_top_k:
-        heapq.heappush(heap, item)
-        return
-    if item[0] <= heap[0][0]:
-        return
-    heapq.heapreplace(heap, item)
+    push_scored_row(heap, keep_top_k, row, tie_breaker, field="selection_score")
 
 
 def score_candidates_batch(
@@ -415,6 +468,7 @@ def score_candidates_batch(
             "candidate_key": candidate_key(candidate),
             "steering_sentence": candidate.steering_sentence,
             "unit_sequence": candidate.unit_sequence,
+            "unit_positions": list(candidate.unit_positions),
             "token_ids": list(candidate.token_ids),
             "token_length": len(candidate.token_ids),
             "length": candidate.length,
@@ -441,6 +495,94 @@ def log_progress(total_sequences: int, retained: list[tuple[float, int, dict]], 
         f"{lead}scored_sequences={total_sequences} retained={len(retained)} "
         f"current_best={current_best:.4f}"
     )
+
+
+def save_checkpoint(
+    *,
+    output_dir: Path,
+    config: SequenceMiningConfig,
+    direction_meta: dict,
+    prompt_source: dict,
+    num_search_units: int,
+    total_sequences: int,
+    retained_heap: list[tuple[float, int, dict]],
+    phase_state: dict,
+) -> None:
+    retained_rows = top_rows_from_heap(retained_heap)
+    write_jsonl(output_dir / PARTIAL_ROWS_FILE, retained_rows)
+    payload = {
+        "config": asdict(config),
+        "direction": direction_meta,
+        "prompt_source": prompt_source,
+        "num_search_units": num_search_units,
+        "total_sequences": total_sequences,
+        "retained_rows": retained_rows,
+        "phase_state": phase_state,
+    }
+    with (output_dir / CHECKPOINT_FILE).open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+    with (output_dir / PARTIAL_SUMMARY_FILE).open("w", encoding="utf-8") as handle:
+        json.dump(
+            {
+                "complete": False,
+                "config": asdict(config),
+                "direction": direction_meta,
+                "prompt_source": prompt_source,
+                "num_search_units": num_search_units,
+                "num_sequences_scored": total_sequences,
+                "num_retained": len(retained_rows),
+                "best_score": retained_rows[0]["mechanistic_score"] if retained_rows else None,
+                "best_selection_score": retained_rows[0].get("selection_score") if retained_rows else None,
+                "phase_state": phase_state,
+            },
+            handle,
+            indent=2,
+        )
+
+
+def load_checkpoint(
+    output_dir: Path,
+    *,
+    config: SequenceMiningConfig,
+) -> dict | None:
+    checkpoint_path = output_dir / CHECKPOINT_FILE
+    if not checkpoint_path.exists():
+        return None
+    with checkpoint_path.open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+
+    saved_config = payload.get("config", {})
+    keys_to_match = (
+        "search_space",
+        "lexicon_file",
+        "search_mode",
+        "min_phrase_len",
+        "max_phrase_len",
+        "beam_width",
+        "expansion_alphabet_size",
+        "retain_top_k",
+        "validation_fraction",
+        "split_seed",
+        "shard_index",
+        "num_shards",
+        "pairs_path",
+        "prompts_file",
+        "axis",
+        "axes",
+        "direction_name",
+        "direction_sign",
+        "probe_completion",
+    )
+    mismatched = [
+        key for key in keys_to_match
+        if saved_config.get(key) != getattr(config, key)
+    ]
+    if mismatched:
+        raise ValueError(
+            f"checkpoint config mismatch for {output_dir}: {', '.join(mismatched)}"
+        )
+    print(f"resuming from checkpoint: {checkpoint_path}")
+    return payload
 
 
 def score_validation_rows(
@@ -507,10 +649,18 @@ def dedupe_preserve_order(items: list[int]) -> list[int]:
 
 
 def main() -> None:
+    signal.signal(signal.SIGTERM, request_stop)
+    signal.signal(signal.SIGINT, request_stop)
+    if hasattr(signal, "SIGUSR1"):
+        signal.signal(signal.SIGUSR1, request_stop)
+
     config = parse_args()
     device = choose_device()
     print(f"pro-human sequence mining config: {asdict(config)}")
     print(f"detected device: {device}")
+
+    output_dir = Path(config.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     direction_unit, direction_meta = load_direction_vector(
         config.direction_tensors,
@@ -561,9 +711,98 @@ def main() -> None:
     if not units:
         raise ValueError("search space produced zero candidate units")
 
-    total_sequences = 0
-    retained: list[tuple[float, int, dict]] = []
-    tie_breaker = count()
+    prompt_source = {
+        "kind": prompt_source_kind,
+        "prompts_file": config.prompts_file,
+        "pairs_path": config.pairs_path,
+        "axis": config.axis,
+        "axes": config.axes,
+    }
+
+    checkpoint = load_checkpoint(output_dir, config=config)
+    total_sequences = int(checkpoint["total_sequences"]) if checkpoint else 0
+    retained_rows = checkpoint["retained_rows"] if checkpoint else []
+    retained, tie_breaker = rebuild_heap(retained_rows, field="selection_score", keep_top_k=config.retain_top_k)
+    phase_state = checkpoint["phase_state"] if checkpoint else {}
+    checkpoint_batches = 0
+
+    def maybe_checkpoint(state: dict) -> None:
+        nonlocal checkpoint_batches
+        checkpoint_batches += 1
+        if STOP_REQUESTED or checkpoint_batches % config.checkpoint_every_batches == 0:
+            save_checkpoint(
+                output_dir=output_dir,
+                config=config,
+                direction_meta=direction_meta,
+                prompt_source=prompt_source,
+                num_search_units=len(units),
+                total_sequences=total_sequences,
+                retained_heap=retained,
+                phase_state=state,
+            )
+            print(
+                "saved checkpoint "
+                f"phase={state.get('phase')} "
+                f"num_sequences_scored={total_sequences} "
+                f"retained={len(retained)}"
+            )
+        if STOP_REQUESTED:
+            raise SystemExit("stop requested after checkpoint")
+
+    def finalize() -> None:
+        retained_rows_final = [
+            row
+            for _, _, row in sorted(retained, key=lambda item: item[0], reverse=True)
+            if row["length"] >= config.min_phrase_len
+        ]
+
+        score_validation_rows(
+            retained_rows_final,
+            config=config,
+            prompt_specs=validation_prompt_specs,
+            injected_prefix_ids=validation_injected_prefix_ids,
+            probe_completion_ids=probe_completion_ids,
+            baseline_activations=validation_baseline_activations if validation_baseline_activations is not None else torch.empty(0),
+            direction_unit=direction_unit,
+            direction_meta=direction_meta,
+            tokenizer=tokenizer,
+            model=model,
+            device=device,
+        )
+        retained_rows_final.sort(key=lambda row: float(row["selection_score"]), reverse=True)
+
+        write_jsonl(output_dir / "retained_candidates.jsonl", retained_rows_final)
+        with (output_dir / "summary.json").open("w", encoding="utf-8") as handle:
+            json.dump(
+                {
+                    "complete": True,
+                    "config": asdict(config),
+                    "direction": direction_meta,
+                    "prompt_source": prompt_source,
+                    "num_total_prompts": len(prompts),
+                    "num_train_prompts": len(train_prompt_specs),
+                    "num_validation_prompts": len(validation_prompt_specs),
+                    "probe_completion": config.probe_completion,
+                    "num_search_units": len(units),
+                    "num_sequences_scored": total_sequences,
+                    "num_retained": len(retained_rows_final),
+                    "best_train_score": retained_rows_final[0]["mechanistic_score"] if retained_rows_final else None,
+                    "best_selection_score": retained_rows_final[0]["selection_score"] if retained_rows_final else None,
+                },
+                handle,
+                indent=2,
+            )
+
+        for path in (
+            output_dir / CHECKPOINT_FILE,
+            output_dir / PARTIAL_ROWS_FILE,
+            output_dir / PARTIAL_SUMMARY_FILE,
+        ):
+            if path.exists():
+                path.unlink()
+
+        print(f"saved retained candidates to {output_dir / 'retained_candidates.jsonl'}")
+        print(f"saved summary to {output_dir / 'summary.json'}")
 
     if config.search_mode == "exhaustive":
         def exhaustive_positions():
@@ -577,7 +816,13 @@ def main() -> None:
                     for suffix in product(range(len(units)), repeat=length - 1):
                         yield (position, *suffix)
 
-        for batch_positions in batched(exhaustive_positions(), config.batch_size):
+        start_index = int(phase_state.get("next_index", 0)) if phase_state.get("phase") == "exhaustive" else 0
+        iterator = exhaustive_positions()
+        for _ in range(start_index):
+            next(iterator, None)
+
+        processed_index = start_index
+        for batch_positions in batched(iterator, config.batch_size):
             candidates = [
                 candidate
                 for candidate in (
@@ -604,6 +849,13 @@ def main() -> None:
             for row in rows:
                 push_candidate(retained, config.retain_top_k, row, tie_breaker)
                 total_sequences += 1
+            processed_index += len(batch_positions)
+            maybe_checkpoint(
+                {
+                    "phase": "exhaustive",
+                    "next_index": processed_index,
+                }
+            )
 
             if total_sequences % max(1, config.batch_size * 100) == 0:
                 log_progress(total_sequences, retained)
@@ -617,9 +869,20 @@ def main() -> None:
             )
             if candidate is not None
         ]
+        if checkpoint and phase_state.get("phase") == "seed":
+            seed_frontier_heap, seed_tie_breaker = rebuild_heap(
+                phase_state.get("frontier_rows", []),
+                field="mechanistic_score",
+                keep_top_k=config.beam_width,
+            )
+            seed_offset = int(phase_state.get("seed_offset", 0))
+        else:
+            seed_frontier_heap = []
+            seed_tie_breaker = count()
+            seed_offset = 0
 
-        frontier_pairs: list[tuple[CandidateSpec, dict]] = []
-        for batch_candidates in batched(seed_candidates, config.batch_size):
+        for start in range(seed_offset, len(seed_candidates), config.batch_size):
+            batch_candidates = seed_candidates[start : start + config.batch_size]
             rows = score_candidates_batch(
                 batch_candidates,
                 config=config,
@@ -633,42 +896,84 @@ def main() -> None:
                 model=model,
                 device=device,
             )
-            frontier_pairs.extend(zip(batch_candidates, rows))
             for row in rows:
+                push_scored_row(
+                    seed_frontier_heap,
+                    config.beam_width,
+                    row,
+                    seed_tie_breaker,
+                    field="mechanistic_score",
+                )
                 if row["length"] >= config.min_phrase_len:
                     push_candidate(retained, config.retain_top_k, row, tie_breaker)
                 total_sequences += 1
+            seed_offset = start + len(batch_candidates)
+            maybe_checkpoint(
+                {
+                    "phase": "seed",
+                    "seed_offset": seed_offset,
+                    "frontier_rows": top_rows_from_heap(seed_frontier_heap),
+                }
+            )
 
-        frontier_pairs.sort(key=lambda item: item[1]["mechanistic_score"], reverse=True)
-        frontier_candidates = [candidate for candidate, _ in frontier_pairs[: config.beam_width]]
+        frontier_rows = top_rows_from_heap(seed_frontier_heap)
+        frontier_candidates = [row_to_candidate(row) for row in frontier_rows[: config.beam_width]]
 
         if config.search_space == "tokenizer_vocab":
             expansion_positions = dedupe_preserve_order(
-                [candidate.unit_positions[0] for candidate, _ in frontier_pairs[: config.expansion_alphabet_size]]
+                [candidate.unit_positions[0] for candidate in frontier_candidates[: config.expansion_alphabet_size]]
             )
         else:
             expansion_positions = list(range(len(units)))
 
         log_progress(total_sequences, retained, prefix="depth=1")
 
-        for depth in range(2, config.max_phrase_len + 1):
-            proposals: list[CandidateSpec] = []
-            for candidate in frontier_candidates:
-                for position in expansion_positions:
+        start_depth = 2
+        proposal_offset = 0
+        next_frontier_heap: list[tuple[float, int, dict]] = []
+        next_frontier_tie_breaker = count()
+
+        if checkpoint and phase_state.get("phase") == "expand":
+            start_depth = int(phase_state["depth"])
+            frontier_candidates = [row_to_candidate(row) for row in phase_state["frontier_rows"]]
+            expansion_positions = [int(item) for item in phase_state["expansion_positions"]]
+            proposal_offset = int(phase_state.get("proposal_offset", 0))
+            next_frontier_heap, next_frontier_tie_breaker = rebuild_heap(
+                phase_state.get("next_frontier_rows", []),
+                field="mechanistic_score",
+                keep_top_k=config.beam_width,
+            )
+
+        for depth in range(start_depth, config.max_phrase_len + 1):
+            total_proposals = len(frontier_candidates) * len(expansion_positions)
+            for start in range(proposal_offset, total_proposals, config.batch_size):
+                batch_candidates: list[CandidateSpec] = []
+                for flat_index in range(start, min(total_proposals, start + config.batch_size)):
+                    parent_index = flat_index // len(expansion_positions)
+                    expansion_index = flat_index % len(expansion_positions)
                     proposal = make_candidate(
-                        candidate.unit_positions + (position,),
+                        frontier_candidates[parent_index].unit_positions + (expansion_positions[expansion_index],),
                         units=units,
                         tokenizer=tokenizer,
                         search_space=config.search_space,
                     )
                     if proposal is not None:
-                        proposals.append(proposal)
+                        batch_candidates.append(proposal)
 
-            if not proposals:
-                break
+                if not batch_candidates:
+                    proposal_offset = min(total_proposals, start + config.batch_size)
+                    maybe_checkpoint(
+                        {
+                            "phase": "expand",
+                            "depth": depth,
+                            "frontier_rows": [asdict(candidate) for candidate in frontier_candidates],
+                            "expansion_positions": expansion_positions,
+                            "proposal_offset": proposal_offset,
+                            "next_frontier_rows": top_rows_from_heap(next_frontier_heap),
+                        }
+                    )
+                    continue
 
-            next_frontier_pairs: list[tuple[CandidateSpec, dict]] = []
-            for batch_candidates in batched(proposals, config.batch_size):
                 rows = score_candidates_batch(
                     batch_candidates,
                     config=config,
@@ -682,68 +987,38 @@ def main() -> None:
                     model=model,
                     device=device,
                 )
-                next_frontier_pairs.extend(zip(batch_candidates, rows))
                 for row in rows:
+                    push_scored_row(
+                        next_frontier_heap,
+                        config.beam_width,
+                        row,
+                        next_frontier_tie_breaker,
+                        field="mechanistic_score",
+                    )
                     if row["length"] >= config.min_phrase_len:
                         push_candidate(retained, config.retain_top_k, row, tie_breaker)
                     total_sequences += 1
 
-            next_frontier_pairs.sort(key=lambda item: item[1]["mechanistic_score"], reverse=True)
-            frontier_candidates = [candidate for candidate, _ in next_frontier_pairs[: config.beam_width]]
+                proposal_offset = min(total_proposals, start + config.batch_size)
+                maybe_checkpoint(
+                    {
+                        "phase": "expand",
+                        "depth": depth,
+                        "frontier_rows": [asdict(candidate) for candidate in frontier_candidates],
+                        "expansion_positions": expansion_positions,
+                        "proposal_offset": proposal_offset,
+                        "next_frontier_rows": top_rows_from_heap(next_frontier_heap),
+                    }
+                )
+
+            frontier_rows = top_rows_from_heap(next_frontier_heap)
+            frontier_candidates = [row_to_candidate(row) for row in frontier_rows[: config.beam_width]]
+            next_frontier_heap = []
+            next_frontier_tie_breaker = count()
+            proposal_offset = 0
             log_progress(total_sequences, retained, prefix=f"depth={depth}")
 
-    retained_rows = [
-        row
-        for _, _, row in sorted(retained, key=lambda item: item[0], reverse=True)
-        if row["length"] >= config.min_phrase_len
-    ]
-
-    score_validation_rows(
-        retained_rows,
-        config=config,
-        prompt_specs=validation_prompt_specs,
-        injected_prefix_ids=validation_injected_prefix_ids,
-        probe_completion_ids=probe_completion_ids,
-        baseline_activations=validation_baseline_activations if validation_baseline_activations is not None else torch.empty(0),
-        direction_unit=direction_unit,
-        direction_meta=direction_meta,
-        tokenizer=tokenizer,
-        model=model,
-        device=device,
-    )
-    retained_rows.sort(key=lambda row: float(row["selection_score"]), reverse=True)
-
-    output_dir = Path(config.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    write_jsonl(output_dir / "retained_candidates.jsonl", retained_rows)
-    with (output_dir / "summary.json").open("w", encoding="utf-8") as handle:
-        json.dump(
-            {
-                "config": asdict(config),
-                "direction": direction_meta,
-                "prompt_source": {
-                    "kind": prompt_source_kind,
-                    "prompts_file": config.prompts_file,
-                    "pairs_path": config.pairs_path,
-                    "axis": config.axis,
-                    "axes": config.axes,
-                },
-                "num_total_prompts": len(prompts),
-                "num_train_prompts": len(train_prompt_specs),
-                "num_validation_prompts": len(validation_prompt_specs),
-                "probe_completion": config.probe_completion,
-                "num_search_units": len(units),
-                "num_sequences_scored": total_sequences,
-                "num_retained": len(retained_rows),
-                "best_train_score": retained_rows[0]["mechanistic_score"] if retained_rows else None,
-                "best_selection_score": retained_rows[0]["selection_score"] if retained_rows else None,
-            },
-            handle,
-            indent=2,
-        )
-
-    print(f"saved retained candidates to {output_dir / 'retained_candidates.jsonl'}")
-    print(f"saved summary to {output_dir / 'summary.json'}")
+    finalize()
 
 
 if __name__ == "__main__":

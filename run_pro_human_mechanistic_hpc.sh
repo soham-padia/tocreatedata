@@ -7,6 +7,7 @@ MODEL_NAME="${MODEL_NAME:-Qwen/Qwen2.5-7B-Instruct}"
 RUN_UPDATE="${RUN_UPDATE:-0}"
 RUN_SLUG="${RUN_SLUG:-pro_human_global}"
 RUN_TAG="${RUN_TAG:-$(date +%Y%m%d_%H%M%S)}"
+RUN_ROOT="${RUN_ROOT:-}"
 NUM_SHARDS="${NUM_SHARDS:-5}"
 MIN_PHRASE_LEN="${MIN_PHRASE_LEN:-1}"
 MAX_PHRASE_LEN="${MAX_PHRASE_LEN:-5}"
@@ -21,6 +22,7 @@ PROBE_COMPLETION="${PROBE_COMPLETION:-I will respond carefully and helpfully.}"
 VALIDATION_FRACTION="${VALIDATION_FRACTION:-0.2}"
 SPLIT_SEED="${SPLIT_SEED:-0}"
 EXPANSION_ALPHABET_SIZE="${EXPANSION_ALPHABET_SIZE:-256}"
+CHECKPOINT_EVERY_BATCHES="${CHECKPOINT_EVERY_BATCHES:-25}"
 PROMPTS_FILE="${PROMPTS_FILE:-}"
 PAIRS_PATH="${PAIRS_PATH:-data/axes}"
 AXIS="${AXIS:-}"
@@ -63,21 +65,27 @@ if ! conda env list | awk '{print $1}' | grep -qx "$CONDA_ENV_NAME"; then
   exit 1
 fi
 
-RUN_ROOT="outputs/mechanistic_dataset/${RUN_SLUG}_${RUN_TAG}"
+if [[ -z "$RUN_ROOT" ]]; then
+  RUN_ROOT="outputs/mechanistic_dataset/${RUN_SLUG}_${RUN_TAG}"
+fi
 mkdir -p "$RUN_ROOT"
 
 extract_job=""
 if [[ -z "$DIRECTION_TENSORS" ]]; then
   DIRECTION_OUTPUT_DIR="$RUN_ROOT/direction"
   DIRECTION_TENSORS="$DIRECTION_OUTPUT_DIR/directions.pt"
-  extract_job="$(
-    CONDA_ENV_NAME="$CONDA_ENV_NAME" \
-    MODEL_NAME="$MODEL_NAME" \
-    LAYER_INDEX="$LAYER_INDEX" \
-    OUTPUT_DIR="$DIRECTION_OUTPUT_DIR" \
-    sbatch --parsable --job-name=extract-pro-human --time="$EXTRACT_TIME" sbatch/extract_mechanistic_directions.sbatch
-  )"
-  submitted_jobs+=("$extract_job")
+  if [[ -f "$DIRECTION_TENSORS" ]]; then
+    echo "Reusing existing direction tensors at $DIRECTION_TENSORS"
+  else
+    extract_job="$(
+      CONDA_ENV_NAME="$CONDA_ENV_NAME" \
+      MODEL_NAME="$MODEL_NAME" \
+      LAYER_INDEX="$LAYER_INDEX" \
+      OUTPUT_DIR="$DIRECTION_OUTPUT_DIR" \
+      sbatch --parsable --job-name=extract-pro-human --time="$EXTRACT_TIME" sbatch/extract_mechanistic_directions.sbatch
+    )"
+    submitted_jobs+=("$extract_job")
+  fi
 fi
 
 declare -a shard_jobs=()
@@ -98,6 +106,7 @@ for (( shard=0; shard<NUM_SHARDS; shard++ )); do
     VALIDATION_FRACTION="$VALIDATION_FRACTION" \
     SPLIT_SEED="$SPLIT_SEED" \
     EXPANSION_ALPHABET_SIZE="$EXPANSION_ALPHABET_SIZE" \
+    CHECKPOINT_EVERY_BATCHES="$CHECKPOINT_EVERY_BATCHES" \
     PROMPTS_FILE="$PROMPTS_FILE" \
     PAIRS_PATH="$PAIRS_PATH" \
     AXIS="$AXIS" \
